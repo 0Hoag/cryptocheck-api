@@ -90,6 +90,7 @@ func (uc ScannerUC) FindCandidates(ctx context.Context, input scanDomain.FindCan
 		candidates = append(candidates, scanDomain.TokenCandidate{
 			Address: asset.Address, Network: asset.Network, Name: asset.Name, Symbol: asset.Symbol,
 			LiquidityUSD: asset.LiquidityUSD, VolumeH24: asset.VolumeH24, ContractScanSupported: asset.ContractScanSupported,
+			DexID: asset.DexID, PairURL: asset.PairURL, PairCreatedAt: asset.PairCreatedAt,
 		})
 	}
 	return candidates, nil
@@ -97,14 +98,19 @@ func (uc ScannerUC) FindCandidates(ctx context.Context, input scanDomain.FindCan
 
 func marketProfile(asset dexscreener.Asset) scanDomain.ScanTokenOutput {
 	return scanDomain.ScanTokenOutput{
-		Network:         asset.Network,
-		Name:            asset.Name,
-		Address:         asset.Address,
-		AnalysisType:    "market_asset",
-		SourceAvailable: false,
-		ScoreAvailable:  false,
-		LiquidityUSD:    asset.LiquidityUSD,
-		VolumeH24:       asset.VolumeH24,
+		Network:          asset.Network,
+		Name:             asset.Name,
+		Address:          asset.Address,
+		AnalysisType:     "market_asset",
+		SourceAvailable:  false,
+		ScoreAvailable:   false,
+		LiquidityUSD:     asset.LiquidityUSD,
+		VolumeH24:        asset.VolumeH24,
+		MarketProvider:   "DexScreener",
+		DexID:            asset.DexID,
+		PairURL:          asset.PairURL,
+		PairCreatedAt:    asset.PairCreatedAt,
+		MarketConfidence: marketConfidence(asset.LiquidityUSD, asset.VolumeH24),
 		Issues: []coreScanner.Issue{{
 			Type:        coreScanner.IssueInfo,
 			Name:        "Market profile only",
@@ -113,6 +119,16 @@ func marketProfile(asset dexscreener.Asset) scanDomain.ScanTokenOutput {
 		}},
 		SafeFeatures: []string{"DexScreener market pair found", "Liquidity and 24h volume are available"},
 	}
+}
+
+func marketConfidence(liquidityUSD, volumeH24 float64) string {
+	if liquidityUSD >= 100_000 && volumeH24 >= 10_000 {
+		return "high"
+	}
+	if liquidityUSD >= 10_000 || volumeH24 >= 1_000 {
+		return "medium"
+	}
+	return "low"
 }
 
 type nativeAssetReport struct {

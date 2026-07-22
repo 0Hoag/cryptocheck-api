@@ -28,11 +28,14 @@ type SearchResponse struct {
 }
 
 type Pair struct {
-	ChainId    string    `json:"chainId"`
-	BaseToken  Token     `json:"baseToken"`
-	QuoteToken Token     `json:"quoteToken"`
-	Liquidity  Liquidity `json:"liquidity"`
-	Volume     Volume    `json:"volume"`
+	ChainId       string    `json:"chainId"`
+	DexID         string    `json:"dexId"`
+	URL           string    `json:"url"`
+	PairCreatedAt int64     `json:"pairCreatedAt"`
+	BaseToken     Token     `json:"baseToken"`
+	QuoteToken    Token     `json:"quoteToken"`
+	Liquidity     Liquidity `json:"liquidity"`
+	Volume        Volume    `json:"volume"`
 }
 
 type Token struct {
@@ -59,6 +62,9 @@ type Asset struct {
 	LiquidityUSD          float64
 	VolumeH24             float64
 	ContractScanSupported bool
+	DexID                 string
+	PairURL               string
+	PairCreatedAt         int64
 }
 
 // SearchTopToken finds the best matching token for a query (Symbol or Name)
@@ -176,6 +182,7 @@ func (c *Client) SearchAssets(query string, limit int) ([]Asset, error) {
 			Address: candidate.token.Address, Network: network, Name: candidate.token.Name,
 			Symbol: candidate.token.Symbol, LiquidityUSD: candidate.pair.Liquidity.Usd,
 			VolumeH24: candidate.pair.Volume.H24, ContractScanSupported: contractScanSupported,
+			DexID: candidate.pair.DexID, PairURL: candidate.pair.URL, PairCreatedAt: candidate.pair.PairCreatedAt,
 		})
 	}
 	if len(assets) == 0 {

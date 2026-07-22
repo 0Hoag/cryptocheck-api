@@ -41,7 +41,7 @@ curl -fsS http://localhost:8080/swagger/index.html >/dev/null
 - [x] Phase 1: expand DexScreener discovery beyond the supported EVM explorers and retain market liquidity/volume for unsupported chains. (ENA smoke test passed)
 - [x] Phase 2: expose the five strongest de-duplicated matches so the client can ask users to choose the chain when a symbol is ambiguous. (BONK candidates smoke test passed)
 - [ ] Add chain-specific analyzers for Solana programs and other high-volume non-EVM chains before claiming source-code coverage.
-- [ ] Add market metadata (pair, liquidity, 24h volume, listing age, source/provider) and a confidence level to every non-contract result.
+- [x] Add market metadata (DEX pair URL, liquidity, 24h volume, pair creation time, source/provider) and a market-data confidence level to every market-only result. (ENA smoke test passed)
 - [ ] Add a prelaunch/watchlist record for projects without a deployed contract: project URL, official socials, claimed chain, launch date, verification evidence and risk flags.
 - [ ] Integrate a launch-calendar/presale provider only after its API terms, rate limits and data attribution are reviewed; cache results and record the provider timestamp.
 - [ ] Add background discovery/monitoring for new listings and contract deployments, with deduplication and alert thresholds.
