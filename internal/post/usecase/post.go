@@ -112,6 +112,9 @@ func (uc impleUsecase) Update(ctx context.Context, sc models.Scope, input post.U
 		uc.l.Errorf(ctx, "post.usecase.Update.Detail: %v", err)
 		return err
 	}
+	if post.AuthorID.Hex() != sc.UserID {
+		return postDomainPermissionDenied()
+	}
 
 	err = uc.repo.Update(ctx, sc, repository.UpdateOptions{
 		Post:         post,
@@ -129,10 +132,20 @@ func (uc impleUsecase) Update(ctx context.Context, sc models.Scope, input post.U
 }
 
 func (uc impleUsecase) Delete(ctx context.Context, sc models.Scope, id string) error {
-	err := uc.repo.Delete(ctx, sc, id)
+	p, err := uc.repo.Detail(ctx, sc, id)
+	if err != nil {
+		uc.l.Errorf(ctx, "post.usecase.Delete.Detail: %v", err)
+		return err
+	}
+	if p.AuthorID.Hex() != sc.UserID {
+		return postDomainPermissionDenied()
+	}
+	err = uc.repo.Delete(ctx, sc, id)
 	if err != nil {
 		uc.l.Errorf(ctx, "post.usecase.Delete.Delete: %v", err)
 		return err
 	}
 	return nil
 }
+
+func postDomainPermissionDenied() error { return post.ErrPermissionDenied }

@@ -13,6 +13,7 @@ var (
 	// Post errors
 	errPostVersionNotFound = pkgErrors.NewHTTPError(143004, "Post version not found")
 	errPostNotFound        = pkgErrors.NewHTTPError(143005, "Post not found")
+	errPermissionDenied    = pkgErrors.NewForbiddenHTTPError()
 
 	// Reaction errors
 	errReactionNotFound = pkgErrors.NewHTTPError(143006, "Reaction not found")
@@ -31,6 +32,8 @@ func (h handler) mapError(err error) error {
 		return errReactionNotFound
 	case post.ErrCommentNotFound:
 		return errCommentNotFound
+	case post.ErrPermissionDenied:
+		return errPermissionDenied
 	default:
 		return err
 	}

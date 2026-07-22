@@ -61,9 +61,10 @@ func (r createReq) validate() error {
 }
 
 type getReq struct {
-	ID  string   `form:"id"`
-	IDs []string `form:"ids[]"`
-	Pin *bool    `form:"pin"`
+	ID       string   `form:"id"`
+	IDs      []string `form:"ids[]"`
+	AuthorID string   `form:"author_id"`
+	Pin      *bool    `form:"pin"`
 }
 
 func (r getReq) validate() error {
@@ -80,14 +81,20 @@ func (r getReq) validate() error {
 			return errWrongQuery
 		}
 	}
+	if r.AuthorID != "" {
+		if _, err := primitive.ObjectIDFromHex(r.AuthorID); err != nil {
+			return errWrongQuery
+		}
+	}
 
 	return nil
 }
 
 func (r getReq) toFilter() post.Filter {
 	filter := post.Filter{
-		ID:  r.ID,
-		IDs: r.IDs,
+		ID:       r.ID,
+		IDs:      r.IDs,
+		AuthorID: r.AuthorID,
 	}
 
 	if r.Pin != nil {

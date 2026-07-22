@@ -49,6 +49,8 @@ curl -fsS 'http://localhost:8080/api/v1/news-feed/scanner?token=ENA&lang=vi'
 - [x] Reaction `type` is persisted.
 - [x] Reaction and comment list endpoints filter by `post_id` correctly.
 - [x] Audit flow passed: create post → like → comment → list one reaction/comment → delete all test data.
+- [x] Post feed accepts a validated `author_id` filter for profile/community views.
+- [x] Post update and delete enforce ownership and return 403 for another user's post.
 - [ ] Add table-driven handler/usecase tests for post, reaction and comment ownership.
 - [ ] Enforce one reaction per user/post/type, with a database unique index and toggle-safe API response.
 - [ ] Return author summary and aggregate reaction/comment counts with feed posts to remove client N+1 calls.
@@ -90,4 +92,3 @@ go test ./internal/group/... ./internal/notification/...
 - [ ] Add request validation/error contract tests and structured observability.
 - [ ] Add CI for `go test ./...`, formatting and vulnerability checks.
 - [ ] Document environment variables and deployment runbook without secrets.
-
