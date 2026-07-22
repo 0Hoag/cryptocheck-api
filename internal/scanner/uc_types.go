@@ -10,10 +10,12 @@ type ScanTokenInput struct {
 }
 
 type ScanTokenOutput struct {
-	Network      string          `json:"network"`
-	Name         string          `json:"name"`
-	Address      string          `json:"address"`
-	TrustScore   int             `json:"trust_score"`
-	Issues       []scanner.Issue `json:"issues"`
-	SafeFeatures []string        `json:"safe_features"`
+	Network         string          `json:"network"`
+	Name            string          `json:"name"`
+	Address         string          `json:"address"`
+	AnalysisType    string          `json:"analysis_type"`
+	SourceAvailable bool            `json:"source_available"`
+	TrustScore      int             `json:"trust_score"`
+	Issues          []scanner.Issue `json:"issues"`
+	SafeFeatures    []string        `json:"safe_features"`
 }
