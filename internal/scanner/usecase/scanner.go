@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/0Hoag/cryptocheck-api/internal/adapters/dexscreener"
 	"github.com/0Hoag/cryptocheck-api/internal/adapters/etherscan"
 	coreScanner "github.com/0Hoag/cryptocheck-api/internal/core/scanner"
 	scanDomain "github.com/0Hoag/cryptocheck-api/internal/scanner"
@@ -17,18 +18,23 @@ func (uc ScannerUC) ScanToken(ctx context.Context, input scanDomain.ScanTokenInp
 	address := query
 	network := "eth"
 	name := query
+	var marketAsset *dexscreener.Asset
 
 	// 1. Resolve Symbol if needed
 	isAddress := (strings.HasPrefix(query, "0x") && len(query) == 42) || query == "0xMOCK"
 	if !isAddress {
-		foundAddr, foundNetwork, foundName, err := uc.dexClient.SearchTopToken(query)
+		asset, err := uc.dexClient.SearchTopAsset(query)
 		if err != nil {
 			uc.l.Errorf(ctx, "Token not found on DexScreener: %v", err)
 			return scanDomain.ScanTokenOutput{}, scanDomain.ErrTokenNotFound
 		}
-		address = foundAddr
-		network = foundNetwork
-		name = foundName
+		marketAsset = &asset
+		address = asset.Address
+		network = asset.Network
+		name = asset.Name
+		if !asset.ContractScanSupported {
+			return marketProfile(asset), nil
+		}
 	}
 
 	// 2. Fetch Source Code (Try all networks like Telegram Bot)
@@ -47,6 +53,9 @@ func (uc ScannerUC) ScanToken(ctx context.Context, input scanDomain.ScanTokenInp
 	}
 
 	if networkFound == "" {
+		if marketAsset != nil {
+			return marketProfile(*marketAsset), nil
+		}
 		uc.l.Errorf(ctx, "scanner.usecase.scanner.ScanToken: source code not found on any network")
 		return scanDomain.ScanTokenOutput{}, scanDomain.ErrSourceCodeNotFound
 	}
@@ -62,10 +71,31 @@ func (uc ScannerUC) ScanToken(ctx context.Context, input scanDomain.ScanTokenInp
 		Address:         address,
 		AnalysisType:    "contract",
 		SourceAvailable: true,
+		ScoreAvailable:  true,
 		TrustScore:      result.TrustScore,
 		Issues:          result.Issues,
 		SafeFeatures:    result.SafeFeatures,
 	}, nil
+}
+
+func marketProfile(asset dexscreener.Asset) scanDomain.ScanTokenOutput {
+	return scanDomain.ScanTokenOutput{
+		Network:         asset.Network,
+		Name:            asset.Name,
+		Address:         asset.Address,
+		AnalysisType:    "market_asset",
+		SourceAvailable: false,
+		ScoreAvailable:  false,
+		LiquidityUSD:    asset.LiquidityUSD,
+		VolumeH24:       asset.VolumeH24,
+		Issues: []coreScanner.Issue{{
+			Type:        coreScanner.IssueInfo,
+			Name:        "Market profile only",
+			Description: "This asset was found on DexScreener, but its chain or source code is not currently supported for a contract security scan.",
+			Impact:      0,
+		}},
+		SafeFeatures: []string{"DexScreener market pair found", "Liquidity and 24h volume are available"},
+	}
 }
 
 type nativeAssetReport struct {
@@ -80,7 +110,7 @@ type nativeAssetReport struct {
 func (r nativeAssetReport) toOutput() scanDomain.ScanTokenOutput {
 	return scanDomain.ScanTokenOutput{
 		Network: r.Network, Name: r.Name, Address: r.Symbol, AnalysisType: "native_asset", SourceAvailable: false,
-		TrustScore: r.TrustScore, Issues: r.Issues, SafeFeatures: r.SafeFeatures,
+		ScoreAvailable: true, TrustScore: r.TrustScore, Issues: r.Issues, SafeFeatures: r.SafeFeatures,
 	}
 }
 

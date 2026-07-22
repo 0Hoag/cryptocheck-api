@@ -55,7 +55,10 @@ type scannerTokenOutput struct {
 	Address         string   `json:"address"`
 	AnalysisType    string   `json:"analysis_type"`
 	SourceAvailable bool     `json:"source_available"`
+	ScoreAvailable  bool     `json:"score_available"`
 	TrustScore      int      `json:"trust_score"`
+	LiquidityUSD    float64  `json:"liquidity_usd,omitempty"`
+	VolumeH24       float64  `json:"volume_h24,omitempty"`
 	Issues          []issue  `json:"issues"`
 	SafeFeatures    []string `json:"safe_features"`
 }
@@ -67,7 +70,10 @@ func (h handler) ToScanTokenOutput(token scanner.ScanTokenOutput) scannerTokenOu
 		Address:         token.Address,
 		AnalysisType:    token.AnalysisType,
 		SourceAvailable: token.SourceAvailable,
+		ScoreAvailable:  token.ScoreAvailable,
 		TrustScore:      token.TrustScore,
+		LiquidityUSD:    token.LiquidityUSD,
+		VolumeH24:       token.VolumeH24,
 		Issues:          toIssues(token.Issues),
 		SafeFeatures:    token.SafeFeatures,
 	}
