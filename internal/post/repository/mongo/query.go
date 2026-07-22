@@ -22,6 +22,9 @@ func (repo impleRepository) buildDetailQuery(ctx context.Context, sc models.Scop
 	}
 
 	filter["_id"] = objectID
+	if err := applyPostVisibility(filter, sc); err != nil {
+		return bson.M{}, err
+	}
 
 	return filter, nil
 }
@@ -40,7 +43,7 @@ func (repo impleRepository) buildListQuery(ctx context.Context, sc models.Scope,
 		filter["_id"] = objectID
 	}
 
-	mIDs := make([]primitive.ObjectID, len(opts.IDs))
+	mIDs := make([]primitive.ObjectID, 0, len(opts.IDs))
 	if len(opts.IDs) > 0 {
 		for _, id := range opts.IDs {
 			mID, err := primitive.ObjectIDFromHex(id)
@@ -63,6 +66,9 @@ func (repo impleRepository) buildListQuery(ctx context.Context, sc models.Scope,
 	}
 
 	filter["pin"] = opts.Pin
+	if err := applyPostVisibility(filter, sc); err != nil {
+		return bson.M{}, err
+	}
 
 	return filter, nil
 }
@@ -81,7 +87,7 @@ func (repo impleRepository) buildGetQuery(ctx context.Context, sc models.Scope, 
 		filter["_id"] = objectID
 	}
 
-	mIDs := make([]primitive.ObjectID, len(opts.IDs))
+	mIDs := make([]primitive.ObjectID, 0, len(opts.IDs))
 	if len(opts.IDs) > 0 {
 		for _, id := range opts.IDs {
 			mID, err := primitive.ObjectIDFromHex(id)
@@ -104,8 +110,28 @@ func (repo impleRepository) buildGetQuery(ctx context.Context, sc models.Scope, 
 	}
 
 	filter["pin"] = opts.Pin
+	if err := applyPostVisibility(filter, sc); err != nil {
+		return bson.M{}, err
+	}
 
 	return filter, nil
+}
+
+func applyPostVisibility(filter bson.M, sc models.Scope) error {
+	publicFilter := bson.M{"permission": bson.M{"$in": bson.A{models.PrivacyTypePublic, ""}}}
+	if sc.UserID == "" {
+		for key, value := range publicFilter {
+			filter[key] = value
+		}
+		return nil
+	}
+
+	authorID, err := primitive.ObjectIDFromHex(sc.UserID)
+	if err != nil {
+		return err
+	}
+	filter["$or"] = bson.A{publicFilter, bson.M{"author_id": authorID}}
+	return nil
 }
 
 func (repo impleRepository) buildGetOneQuery(ctx context.Context, sc models.Scope, opts repository.GetOneOptions) (bson.M, error) {

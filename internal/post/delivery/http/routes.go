@@ -1,14 +1,14 @@
 package http
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/0Hoag/cryptocheck-api/internal/middleware"
+	"github.com/gin-gonic/gin"
 )
 
 func MapRoutes(r *gin.RouterGroup, h Handler, mw middleware.Middleware) {
 	// Public routes (no auth required)
-	r.GET("/:id", h.Detail)
-	r.GET("", h.Get)
+	r.GET("/:id", mw.OptionalAuth(), h.Detail)
+	r.GET("", mw.OptionalAuth(), h.Get)
 
 	// Protected routes (auth required)
 	authenticated := r.Group("")
