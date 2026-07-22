@@ -180,6 +180,8 @@ func (h handler) newPostDataResp(p models.Post) postDataResp {
 		SourceURL:     p.SourceURL,
 		CreatedAt:     p.CreatedAt,
 		UpdatedAt:     p.UpdatedAt,
+		ReactionCount: p.ReactionCount,
+		CommentCount:  p.CommentCount,
 	}
 }
 
@@ -207,6 +209,8 @@ type postDataResp struct {
 	SourceURL     string    `json:"source_url"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
+	ReactionCount int64     `json:"reaction_count"`
+	CommentCount  int64     `json:"comment_count"`
 }
 
 type postItem struct {

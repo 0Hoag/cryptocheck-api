@@ -9,6 +9,7 @@ import (
 	"github.com/0Hoag/cryptocheck-api/internal/models"
 	"github.com/0Hoag/cryptocheck-api/internal/post"
 	"github.com/0Hoag/cryptocheck-api/internal/post/repository"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (uc impleUsecase) Create(ctx context.Context, sc models.Scope, input post.CreateInput) (models.Post, error) {
@@ -99,6 +100,21 @@ func (uc impleUsecase) Get(ctx context.Context, sc models.Scope, input post.GetI
 	if err != nil {
 		uc.l.Errorf(ctx, "post.usecase.Get.Get: %v", err)
 		return post.GetOutput{}, err
+	}
+	postIDs := make([]primitive.ObjectID, 0, len(posts))
+	for _, item := range posts {
+		postIDs = append(postIDs, item.ID)
+	}
+	counts, err := uc.repo.GetEngagementCounts(ctx, postIDs)
+	if err != nil {
+		uc.l.Errorf(ctx, "post.usecase.Get.GetEngagementCounts: %v", err)
+		return post.GetOutput{}, err
+	}
+	for index := range posts {
+		if count, ok := counts[posts[index].ID]; ok {
+			posts[index].ReactionCount = count.ReactionCount
+			posts[index].CommentCount = count.CommentCount
+		}
 	}
 	return post.GetOutput{
 		Posts:     posts,

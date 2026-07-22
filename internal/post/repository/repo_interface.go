@@ -5,6 +5,7 @@ import (
 
 	"github.com/0Hoag/cryptocheck-api/internal/models"
 	"github.com/0Hoag/cryptocheck-api/pkg/paginator"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 //go:generate mockery --name=Repository
@@ -22,6 +23,7 @@ type PostRepo interface {
 	GetOne(ctx context.Context, sc models.Scope, opts GetOneOptions) (models.Post, error)
 	Update(ctx context.Context, sc models.Scope, opts UpdateOptions) error
 	Delete(ctx context.Context, sc models.Scope, id string) error
+	GetEngagementCounts(ctx context.Context, postIDs []primitive.ObjectID) (map[primitive.ObjectID]EngagementCounts, error)
 }
 
 type ReactionRepo interface {

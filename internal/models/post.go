@@ -23,6 +23,9 @@ type Post struct {
 	CreatedAt time.Time  `bson:"created_at"`
 	UpdatedAt time.Time  `bson:"updated_at"`
 	DeletedAt *time.Time `bson:"deleted_at,omitempty"`
+
+	ReactionCount int64 `bson:"-"`
+	CommentCount  int64 `bson:"-"`
 }
 
 type PrivacyType string

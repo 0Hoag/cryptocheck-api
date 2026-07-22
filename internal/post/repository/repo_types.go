@@ -49,6 +49,11 @@ type UpdateOptions struct {
 	Permission   string
 }
 
+type EngagementCounts struct {
+	ReactionCount int64
+	CommentCount  int64
+}
+
 // Reaction
 type CreateReactionOptions struct {
 	PostID string
