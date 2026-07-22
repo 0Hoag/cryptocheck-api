@@ -35,6 +35,18 @@ curl -fsS http://localhost:8080/swagger/index.html >/dev/null
 - [ ] Add a persisted scan history with owner, input, network, score, engine version and timestamps.
 - [ ] Define and enforce Free/Premium quotas and analysis depth server-side.
 
+### 1.1 Multi-market and early-launch coverage
+
+- [ ] Split scanner output into explicit modes: `contract`, `native_asset`, `market_asset`, and `prelaunch_watchlist`; never present a contract-security score when no deployed contract exists.
+- [ ] Expand token discovery beyond the current supported EVM explorers, retaining DexScreener market data for newly listed assets on unsupported chains.
+- [ ] Add chain-specific analyzers for Solana programs and other high-volume non-EVM chains before claiming source-code coverage.
+- [ ] Add market metadata (pair, liquidity, 24h volume, listing age, source/provider) and a confidence level to every non-contract result.
+- [ ] Add a prelaunch/watchlist record for projects without a deployed contract: project URL, official socials, claimed chain, launch date, verification evidence and risk flags.
+- [ ] Integrate a launch-calendar/presale provider only after its API terms, rate limits and data attribution are reviewed; cache results and record the provider timestamp.
+- [ ] Add background discovery/monitoring for new listings and contract deployments, with deduplication and alert thresholds.
+
+Acceptance rule: do not claim “all coins” coverage. Results must clearly state whether they are contract analysis, native-asset profile, market-data profile, or prelaunch due diligence, plus the data freshness and source coverage.
+
 Pass checks:
 
 ```bash
