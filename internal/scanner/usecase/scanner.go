@@ -32,6 +32,15 @@ func (uc ScannerUC) ScanToken(ctx context.Context, input scanDomain.ScanTokenInp
 		address = asset.Address
 		network = asset.Network
 		name = asset.Name
+		if asset.Network == "solana" {
+			report, solErr := uc.scanSolanaMint(ctx, asset, input.Language)
+			if solErr == nil {
+				return report, nil
+			}
+			// Public Solana RPC can be rate limited. Preserve a useful market
+			// profile rather than making an available token look nonexistent.
+			uc.l.Errorf(ctx, "scanner.usecase.scanner.ScanToken: solana mint lookup failed: %v", solErr)
+		}
 		if !asset.ContractScanSupported {
 			return marketProfile(asset), nil
 		}
@@ -119,6 +128,34 @@ func marketProfile(asset dexscreener.Asset) scanDomain.ScanTokenOutput {
 		}},
 		SafeFeatures: []string{"DexScreener market pair found", "Liquidity and 24h volume are available"},
 	}
+}
+
+func (uc ScannerUC) scanSolanaMint(ctx context.Context, asset dexscreener.Asset, language string) (scanDomain.ScanTokenOutput, error) {
+	mint, err := uc.solClient.GetMint(ctx, asset.Address)
+	if err != nil {
+		return scanDomain.ScanTokenOutput{}, err
+	}
+	score := 78
+	issues := []coreScanner.Issue{{Type: coreScanner.IssueInfo, Name: "SPL mint authority report", Description: "This is an on-chain authority check for a Solana SPL mint, not a full smart-contract audit.", Impact: 0}}
+	safeFeatures := []string{"Solana SPL mint found", "On-chain mint metadata available"}
+	if mint.MintAuthority != "" {
+		score -= 25
+		issues = append(issues, coreScanner.Issue{Type: coreScanner.IssueWarning, Name: "Mint authority active", Description: "An authority can still mint additional supply. Confirm the authority is governed, capped, or revoked before treating supply as fixed.", Impact: 25})
+	} else {
+		safeFeatures = append(safeFeatures, "Mint authority revoked")
+	}
+	if mint.FreezeAuthority != "" {
+		score -= 20
+		issues = append(issues, coreScanner.Issue{Type: coreScanner.IssueWarning, Name: "Freeze authority active", Description: "An authority can freeze token accounts. Check the project's custody and governance policy.", Impact: 20})
+	} else {
+		safeFeatures = append(safeFeatures, "Freeze authority revoked")
+	}
+	return scanDomain.ScanTokenOutput{
+		Network: asset.Network, Name: asset.Name, Address: asset.Address, AnalysisType: "solana_mint", SourceAvailable: false,
+		ScoreAvailable: true, TrustScore: score, LiquidityUSD: asset.LiquidityUSD, VolumeH24: asset.VolumeH24,
+		MarketProvider: "DexScreener", DexID: asset.DexID, PairURL: asset.PairURL, PairCreatedAt: asset.PairCreatedAt,
+		MarketConfidence: marketConfidence(asset.LiquidityUSD, asset.VolumeH24), Issues: issues, SafeFeatures: safeFeatures,
+	}, nil
 }
 
 func marketConfidence(liquidityUSD, volumeH24 float64) string {
