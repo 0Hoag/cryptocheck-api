@@ -30,6 +30,7 @@ func (r createReactionReq) validate() error {
 type getReactionReq struct {
 	ID     string   `form:"id"`
 	IDs    []string `form:"ids[]"`
+	PostID string   `form:"post_id"`
 	UserID string   `form:"user_id"`
 	Type   string   `form:"type"`
 }
@@ -54,6 +55,11 @@ func (r getReactionReq) validate() error {
 			return errWrongQuery
 		}
 	}
+	if r.PostID != "" {
+		if _, err := primitive.ObjectIDFromHex(r.PostID); err != nil {
+			return errWrongQuery
+		}
+	}
 
 	return nil
 }
@@ -62,6 +68,7 @@ func (r getReactionReq) toFilter() post.FilterReaction {
 	return post.FilterReaction{
 		ID:     r.ID,
 		IDs:    r.IDs,
+		PostID: r.PostID,
 		UserID: r.UserID,
 		Type:   models.ReactionType(r.Type),
 	}

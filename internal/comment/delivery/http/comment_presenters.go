@@ -75,8 +75,9 @@ func (r updateReq) validate() error {
 }
 
 type getReq struct {
-	ID  string   `form:"id"`
-	IDs []string `form:"ids[]"`
+	ID     string   `form:"id"`
+	IDs    []string `form:"ids[]"`
+	PostID string   `form:"post_id"`
 }
 
 func (r getReq) validate() error {
@@ -93,14 +94,20 @@ func (r getReq) validate() error {
 			return errWrongQuery
 		}
 	}
+	if r.PostID != "" {
+		if _, err := primitive.ObjectIDFromHex(r.PostID); err != nil {
+			return errWrongQuery
+		}
+	}
 
 	return nil
 }
 
 func (r getReq) toFilter() comment.Filter {
 	return comment.Filter{
-		ID:  r.ID,
-		IDs: r.IDs,
+		ID:     r.ID,
+		IDs:    r.IDs,
+		PostID: r.PostID,
 	}
 }
 

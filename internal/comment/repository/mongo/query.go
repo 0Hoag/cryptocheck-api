@@ -98,6 +98,12 @@ func (repo impleRepository) buildListQuery(ctx context.Context, sc models.Scope,
 		}
 		filter["_id"] = bson.M{"$in": mIDs}
 	}
+	if opts.PostID != "" {
+		filter["post_id"], err = primitive.ObjectIDFromHex(opts.PostID)
+		if err != nil {
+			return bson.M{}, err
+		}
+	}
 
 	return filter, nil
 }
@@ -130,6 +136,12 @@ func (repo impleRepository) buildGetQuery(ctx context.Context, sc models.Scope, 
 			mIDs = append(mIDs, mID)
 		}
 		filter["_id"] = bson.M{"$in": mIDs}
+	}
+	if opts.PostID != "" {
+		filter["post_id"], err = primitive.ObjectIDFromHex(opts.PostID)
+		if err != nil {
+			return bson.M{}, err
+		}
 	}
 
 	return filter, nil

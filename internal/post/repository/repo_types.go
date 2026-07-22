@@ -58,6 +58,7 @@ type CreateReactionOptions struct {
 type FilterReaction struct {
 	ID     string
 	IDs    []string
+	PostID string
 	UserID string
 	Type   models.ReactionType
 }

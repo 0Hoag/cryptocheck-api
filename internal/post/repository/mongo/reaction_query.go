@@ -52,6 +52,12 @@ func (repo impleRepository) buildGetOneReactionQuery(ctx context.Context, sc mod
 			return bson.M{}, err
 		}
 	}
+	if f.PostID != "" {
+		filter["post_id"], err = primitive.ObjectIDFromHex(f.PostID)
+		if err != nil {
+			return bson.M{}, err
+		}
+	}
 
 	if f.Type != "" {
 		filter["type"] = f.Type
@@ -97,6 +103,12 @@ func (repo impleRepository) buildListReactionQuery(ctx context.Context, sc model
 			return bson.M{}, err
 		}
 	}
+	if opts.PostID != "" {
+		filter["post_id"], err = primitive.ObjectIDFromHex(opts.PostID)
+		if err != nil {
+			return bson.M{}, err
+		}
+	}
 
 	if opts.Type != "" {
 		filter["type"] = opts.Type
@@ -139,6 +151,12 @@ func (repo impleRepository) buildGetReactionQuery(ctx context.Context, sc models
 		filter["user_id"], err = primitive.ObjectIDFromHex(opts.UserID)
 		if err != nil {
 			repo.l.Errorf(ctx, "reaction.mongo.buildGetReactionQuery.ObjectIDFromHex: %v", err)
+			return bson.M{}, err
+		}
+	}
+	if opts.PostID != "" {
+		filter["post_id"], err = primitive.ObjectIDFromHex(opts.PostID)
+		if err != nil {
 			return bson.M{}, err
 		}
 	}
