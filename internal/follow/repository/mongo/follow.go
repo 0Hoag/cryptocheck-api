@@ -73,7 +73,7 @@ func (repo impleRepository) List(ctx context.Context, sc models.Scope, opts repo
 	}
 
 	var ms []models.Follow
-	err = cur.All(ctx, ms)
+	err = cur.All(ctx, &ms)
 	if err != nil {
 		repo.l.Errorf(ctx, "follows.mongo.List.All: %v", err)
 		return []models.Follow{}, err

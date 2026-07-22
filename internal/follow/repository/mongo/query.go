@@ -11,31 +11,23 @@ import (
 )
 
 func (repo impleRepository) buildDetailQuery(ctx context.Context, sc models.Scope, id string) (bson.M, error) {
-	filter, err := mongo.BuildScopeQuery(ctx, repo.l, sc)
-	if err != nil {
-		repo.l.Errorf(ctx, "follow.mongo.buildDetailQuery.BuildScopeQuery: %v", err)
-		return bson.M{}, err
-	}
-
+	filter := bson.M{}
 	filter = mongo.BuildQueryWithSoftDelete(filter)
 
-	filter["_id"], err = primitive.ObjectIDFromHex(id)
+	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		repo.l.Errorf(ctx, "follow.mongo.buildDetailQuery.BuildQueryWithSoftDelete: %v", err)
 		return bson.M{}, err
 	}
 
+	filter["_id"] = objectID
 	return filter, nil
 }
 
 func (repo impleRepository) buildListQuery(ctx context.Context, sc models.Scope, opts repository.ListOptions) (bson.M, error) {
-	filter, err := mongo.BuildScopeQuery(ctx, repo.l, sc)
-	if err != nil {
-		repo.l.Errorf(ctx, "follow.mongo.buildListQuery.BuildScopeQuery: %v", err)
-		return bson.M{}, err
-	}
-
+	filter := bson.M{}
 	filter = mongo.BuildQueryWithSoftDelete(filter)
+	var err error
 
 	if opts.ID != "" {
 		filter["_id"], err = primitive.ObjectIDFromHex(opts.ID)
@@ -45,7 +37,7 @@ func (repo impleRepository) buildListQuery(ctx context.Context, sc models.Scope,
 		}
 	}
 
-	mIDs := make([]primitive.ObjectID, len(opts.IDs))
+	mIDs := make([]primitive.ObjectID, 0, len(opts.IDs))
 	if len(opts.IDs) > 0 {
 		for _, id := range opts.IDs {
 			mID, err := primitive.ObjectIDFromHex(id)
@@ -78,13 +70,9 @@ func (repo impleRepository) buildListQuery(ctx context.Context, sc models.Scope,
 }
 
 func (repo impleRepository) buildGetQuery(ctx context.Context, sc models.Scope, opts repository.GetOptions) (bson.M, error) {
-	filter, err := mongo.BuildScopeQuery(ctx, repo.l, sc)
-	if err != nil {
-		repo.l.Errorf(ctx, "follow.mongo.buildGetQuery.BuildScopeQuery: %v", err)
-		return bson.M{}, err
-	}
-
+	filter := bson.M{}
 	filter = mongo.BuildQueryWithSoftDelete(filter)
+	var err error
 
 	if opts.ID != "" {
 		filter["_id"], err = primitive.ObjectIDFromHex(opts.ID)
@@ -94,7 +82,7 @@ func (repo impleRepository) buildGetQuery(ctx context.Context, sc models.Scope, 
 		}
 	}
 
-	mIDs := make([]primitive.ObjectID, len(opts.IDs))
+	mIDs := make([]primitive.ObjectID, 0, len(opts.IDs))
 	if len(opts.IDs) > 0 {
 		for _, id := range opts.IDs {
 			mID, err := primitive.ObjectIDFromHex(id)

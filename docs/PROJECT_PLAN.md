@@ -68,7 +68,8 @@ go test ./internal/post/... ./internal/comment/...
 
 - [ ] Add `groups` domain: group, membership, role (owner/admin/mod/member), join policy and visibility.
 - [ ] Add group post feed and moderation controls.
-- [ ] Add follow and profile feed endpoints with privacy-aware access control.
+- [x] Add authenticated follow/unfollow and author-filtered profile feed endpoints (integration tested).
+- [ ] Add follower/following counts and privacy-aware follow access rules.
 - [ ] Add notifications for reactions, comments, follows and group events.
 - [ ] Add reporting/moderation audit trail for posts and comments.
 
