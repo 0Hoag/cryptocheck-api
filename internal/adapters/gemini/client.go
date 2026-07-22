@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/generative-ai-go/genai"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -36,11 +37,61 @@ func NewClient(apiKey string) *Client {
 		log.Fatalf("Error creating Gemini client: %v", err)
 	}
 
-	// Use gemini-1.5-flash for stability
-	model := client.GenerativeModel("gemini-1.5-flash")
+	// Gemini model availability is tied to the API key and changes over time.
+	// Discover a generateContent-capable model instead of hard-coding a retired
+	// model (gemini-1.5-flash), which otherwise forces every scan to fallback.
+	model := client.GenerativeModel(selectGenerationModel(ctx, client))
 	model.SetTemperature(0.1)
 
 	return &Client{model: model}
+}
+
+func selectGenerationModel(ctx context.Context, client *genai.Client) string {
+	var available []string
+	models := client.ListModels(ctx)
+	for {
+		info, err := models.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Printf("Gemini model discovery failed: %v; using fallback model", err)
+			return "gemini-2.0-flash"
+		}
+		if supportsGenerateContent(info.SupportedGenerationMethods) {
+			available = append(available, info.BaseModelID)
+		}
+	}
+
+	for _, preferred := range []string{"gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"} {
+		for _, model := range available {
+			if model == preferred {
+				log.Printf("Gemini model selected: %s", model)
+				return model
+			}
+		}
+	}
+	for _, model := range available {
+		if strings.Contains(model, "flash") {
+			log.Printf("Gemini model selected: %s", model)
+			return model
+		}
+	}
+	if len(available) > 0 {
+		log.Printf("Gemini model selected: %s", available[0])
+		return available[0]
+	}
+	log.Printf("Gemini model discovery returned no generateContent-capable model; using fallback")
+	return "gemini-2.0-flash"
+}
+
+func supportsGenerateContent(methods []string) bool {
+	for _, method := range methods {
+		if method == "generateContent" {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *Client) AnalyzeContract(sourceCode string, language string) (*AIAnalysisResult, error) {
