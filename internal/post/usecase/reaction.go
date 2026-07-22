@@ -15,7 +15,10 @@ func (uc impleUsecase) CreateReaction(ctx context.Context, sc models.Scope, inpu
 		return models.Reaction{}, err
 	}
 
-	reaction, err := uc.CreateReaction(ctx, sc, input)
+	reaction, err := uc.repo.CreateReaction(ctx, sc, repository.CreateReactionOptions{
+		PostID: input.PostID,
+		Type:   input.Type,
+	})
 	if err != nil {
 		uc.l.Errorf(ctx, "post.usecase.CreateReaction.CreateReaction: %v", err)
 		return models.Reaction{}, err
@@ -38,6 +41,7 @@ func (uc impleUsecase) ListReaction(ctx context.Context, sc models.Scope, input 
 		FilterReaction: repository.FilterReaction{
 			ID:     input.ID,
 			IDs:    input.IDs,
+			PostID: input.PostID,
 			UserID: input.UserID,
 			Type:   input.Type,
 		},
@@ -55,6 +59,7 @@ func (uc impleUsecase) GetReaction(ctx context.Context, sc models.Scope, input p
 		FilterReaction: repository.FilterReaction{
 			ID:     input.ID,
 			IDs:    input.IDs,
+			PostID: input.PostID,
 			UserID: input.UserID,
 			Type:   input.Type,
 		},

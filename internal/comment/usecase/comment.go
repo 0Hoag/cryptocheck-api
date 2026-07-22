@@ -40,8 +40,9 @@ func (uc impleUsecase) Detail(ctx context.Context, sc models.Scope, id string) (
 func (uc impleUsecase) List(ctx context.Context, sc models.Scope, input comment.ListInput) ([]models.Comment, error) {
 	comments, err := uc.repo.List(ctx, sc, repository.ListOptions{
 		Filter: repository.Filter{
-			ID:  input.ID,
-			IDs: input.IDs,
+			ID:     input.ID,
+			IDs:    input.IDs,
+			PostID: input.PostID,
 		},
 	})
 	if err != nil {
@@ -54,8 +55,9 @@ func (uc impleUsecase) List(ctx context.Context, sc models.Scope, input comment.
 func (uc impleUsecase) Get(ctx context.Context, sc models.Scope, input comment.GetInput) (comment.GetOutput, error) {
 	comments, paginator, err := uc.repo.Get(ctx, sc, repository.GetOptions{
 		Filter: repository.Filter{
-			ID:  input.ID,
-			IDs: input.IDs,
+			ID:     input.ID,
+			IDs:    input.IDs,
+			PostID: input.PostID,
 		},
 		PagQuery: input.PagQuery,
 	})

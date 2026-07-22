@@ -11,11 +11,8 @@ import (
 )
 
 func (repo impleRepository) buildDetailReactionQuery(ctx context.Context, sc models.Scope, id string) (bson.M, error) {
-	filter, err := mongo.BuildScopeQuery(ctx, repo.l, sc)
-	if err != nil {
-		repo.l.Errorf(ctx, "post.mongo.buildDetailReactionQuery.BuildScopeQuery: %v", err)
-		return bson.M{}, err
-	}
+	filter := bson.M{}
+	var err error
 
 	filter = mongo.BuildQueryWithSoftDelete(filter)
 
@@ -24,16 +21,19 @@ func (repo impleRepository) buildDetailReactionQuery(ctx context.Context, sc mod
 		repo.l.Errorf(ctx, "post.mongo.buildDetailReactionQuery.BuildQueryWithSoftDelete: %v", err)
 		return bson.M{}, err
 	}
+	if sc.UserID != "" {
+		filter["author_id"], err = primitive.ObjectIDFromHex(sc.UserID)
+		if err != nil {
+			return bson.M{}, err
+		}
+	}
 
 	return filter, nil
 }
 
 func (repo impleRepository) buildGetOneReactionQuery(ctx context.Context, sc models.Scope, f repository.FilterReaction) (bson.M, error) {
-	filter, err := mongo.BuildScopeQuery(ctx, repo.l, sc)
-	if err != nil {
-		repo.l.Errorf(ctx, "post.mongo.buildGetOneReactionQuery.BuildScopeQuery: %v", err)
-		return bson.M{}, err
-	}
+	filter := bson.M{}
+	var err error
 
 	filter = mongo.BuildQueryWithSoftDelete(filter)
 
@@ -67,11 +67,8 @@ func (repo impleRepository) buildGetOneReactionQuery(ctx context.Context, sc mod
 }
 
 func (repo impleRepository) buildListReactionQuery(ctx context.Context, sc models.Scope, opts repository.ListReactionOptions) (bson.M, error) {
-	filter, err := mongo.BuildScopeQuery(ctx, repo.l, sc)
-	if err != nil {
-		repo.l.Errorf(ctx, "reaction.mongo.buildListReactionQuery.BuildScopeQuery: %v", err)
-		return bson.M{}, err
-	}
+	filter := bson.M{}
+	var err error
 
 	filter = mongo.BuildQueryWithSoftDelete(filter)
 
@@ -118,11 +115,8 @@ func (repo impleRepository) buildListReactionQuery(ctx context.Context, sc model
 }
 
 func (repo impleRepository) buildGetReactionQuery(ctx context.Context, sc models.Scope, opts repository.GetReactionOptions) (bson.M, error) {
-	filter, err := mongo.BuildScopeQuery(ctx, repo.l, sc)
-	if err != nil {
-		repo.l.Errorf(ctx, "reaction.mongo.buildGetReactionQuery.buildGetQuery: %v", err)
-		return bson.M{}, err
-	}
+	filter := bson.M{}
+	var err error
 
 	filter = mongo.BuildQueryWithSoftDelete(filter)
 

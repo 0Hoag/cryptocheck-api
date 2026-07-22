@@ -11,11 +11,8 @@ import (
 )
 
 func (repo impleRepository) buildDetailQuery(ctx context.Context, sc models.Scope, id string) (bson.M, error) {
-	filter, err := mongo.BuildScopeQuery(ctx, repo.l, sc)
-	if err != nil {
-		repo.l.Errorf(ctx, "comment.mongo.buildDetailQuery.BuildScopeQuery: %v", err)
-		return bson.M{}, err
-	}
+	filter := bson.M{}
+	var err error
 
 	filter = mongo.BuildQueryWithSoftDelete(filter)
 
@@ -24,16 +21,19 @@ func (repo impleRepository) buildDetailQuery(ctx context.Context, sc models.Scop
 		repo.l.Errorf(ctx, "comment.mongo.buildDetailQuery.BuildQueryWithSoftDelete: %v", err)
 		return bson.M{}, err
 	}
+	if sc.UserID != "" {
+		filter["author_id"], err = primitive.ObjectIDFromHex(sc.UserID)
+		if err != nil {
+			return bson.M{}, err
+		}
+	}
 
 	return filter, nil
 }
 
 func (repo impleRepository) buildGetOneQuery(ctx context.Context, sc models.Scope, f repository.Filter) (bson.M, error) {
-	filter, err := mongo.BuildScopeQuery(ctx, repo.l, sc)
-	if err != nil {
-		repo.l.Errorf(ctx, "comment.mongo.buildListQuery.BuildScopeQuery: %v", err)
-		return bson.M{}, err
-	}
+	filter := bson.M{}
+	var err error
 
 	filter = mongo.BuildQueryWithSoftDelete(filter)
 
@@ -70,11 +70,8 @@ func (repo impleRepository) buildGetOneQuery(ctx context.Context, sc models.Scop
 }
 
 func (repo impleRepository) buildListQuery(ctx context.Context, sc models.Scope, opts repository.ListOptions) (bson.M, error) {
-	filter, err := mongo.BuildScopeQuery(ctx, repo.l, sc)
-	if err != nil {
-		repo.l.Errorf(ctx, "comment.mongo.buildListQuery.BuildScopeQuery: %v", err)
-		return bson.M{}, err
-	}
+	filter := bson.M{}
+	var err error
 
 	filter = mongo.BuildQueryWithSoftDelete(filter)
 
@@ -109,11 +106,8 @@ func (repo impleRepository) buildListQuery(ctx context.Context, sc models.Scope,
 }
 
 func (repo impleRepository) buildGetQuery(ctx context.Context, sc models.Scope, opts repository.GetOptions) (bson.M, error) {
-	filter, err := mongo.BuildScopeQuery(ctx, repo.l, sc)
-	if err != nil {
-		repo.l.Errorf(ctx, "comment.mongo.buildGetQuery.BuildScopeQuery: %v", err)
-		return bson.M{}, err
-	}
+	filter := bson.M{}
+	var err error
 
 	filter = mongo.BuildQueryWithSoftDelete(filter)
 

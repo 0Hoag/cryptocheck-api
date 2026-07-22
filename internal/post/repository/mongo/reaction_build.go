@@ -22,6 +22,7 @@ func (repo impleRepository) buildReactionModels(ctx context.Context, sc models.S
 		ID:        repo.db.NewObjectID(),
 		PostID:    postID,
 		AuthorID:  mongo.ObjectIDFromHexOrNil(sc.UserID),
+		Type:      opts.Type,
 		CreatedAt: now,
 	}
 
