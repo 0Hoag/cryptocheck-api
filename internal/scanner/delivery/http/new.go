@@ -3,12 +3,13 @@ package http
 import (
 	"github.com/0Hoag/cryptocheck-api/pkg/log"
 
-	"github.com/gin-gonic/gin"
 	"github.com/0Hoag/cryptocheck-api/internal/scanner"
+	"github.com/gin-gonic/gin"
 )
 
 type Handler interface {
 	ScanToken(c *gin.Context)
+	FindCandidates(c *gin.Context)
 }
 
 type handler struct {

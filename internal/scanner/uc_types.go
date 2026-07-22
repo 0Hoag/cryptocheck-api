@@ -9,6 +9,20 @@ type ScanTokenInput struct {
 	Language string `json:"language"` // "en" or "vi"
 }
 
+type FindCandidatesInput struct {
+	Query string `json:"query"`
+}
+
+type TokenCandidate struct {
+	Address               string  `json:"address"`
+	Network               string  `json:"network"`
+	Name                  string  `json:"name"`
+	Symbol                string  `json:"symbol"`
+	LiquidityUSD          float64 `json:"liquidity_usd"`
+	VolumeH24             float64 `json:"volume_h24"`
+	ContractScanSupported bool    `json:"contract_scan_supported"`
+}
+
 type ScanTokenOutput struct {
 	Network         string          `json:"network"`
 	Name            string          `json:"name"`

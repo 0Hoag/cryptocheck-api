@@ -78,6 +78,23 @@ func (uc ScannerUC) ScanToken(ctx context.Context, input scanDomain.ScanTokenInp
 	}, nil
 }
 
+func (uc ScannerUC) FindCandidates(ctx context.Context, input scanDomain.FindCandidatesInput) ([]scanDomain.TokenCandidate, error) {
+	query := strings.TrimSpace(input.Query)
+	assets, err := uc.dexClient.SearchAssets(query, 5)
+	if err != nil {
+		uc.l.Errorf(ctx, "scanner.usecase.scanner.FindCandidates: %v", err)
+		return nil, scanDomain.ErrTokenNotFound
+	}
+	candidates := make([]scanDomain.TokenCandidate, 0, len(assets))
+	for _, asset := range assets {
+		candidates = append(candidates, scanDomain.TokenCandidate{
+			Address: asset.Address, Network: asset.Network, Name: asset.Name, Symbol: asset.Symbol,
+			LiquidityUSD: asset.LiquidityUSD, VolumeH24: asset.VolumeH24, ContractScanSupported: asset.ContractScanSupported,
+		})
+	}
+	return candidates, nil
+}
+
 func marketProfile(asset dexscreener.Asset) scanDomain.ScanTokenOutput {
 	return scanDomain.ScanTokenOutput{
 		Network:         asset.Network,

@@ -77,25 +77,35 @@ func (c *Client) SearchTopToken(query string) (string, string, string, error) {
 // SearchTopAsset returns the strongest DexScreener match on any indexed chain.
 // It deliberately does not imply that a security source-code scan is available.
 func (c *Client) SearchTopAsset(query string) (Asset, error) {
+	assets, err := c.SearchAssets(query, 1)
+	if err != nil {
+		return Asset{}, err
+	}
+	return assets[0], nil
+}
+
+// SearchAssets returns a short, de-duplicated list of the strongest matches.
+// Callers can let a user choose the correct chain when a symbol is ambiguous.
+func (c *Client) SearchAssets(query string, limit int) ([]Asset, error) {
 	url := fmt.Sprintf("https://api.dexscreener.com/latest/dex/search?q=%s", url.QueryEscape(query))
 
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
-		return Asset{}, fmt.Errorf("dexscreener request failed: %w", err)
+		return nil, fmt.Errorf("dexscreener request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return Asset{}, fmt.Errorf("dexscreener status: %d", resp.StatusCode)
+		return nil, fmt.Errorf("dexscreener status: %d", resp.StatusCode)
 	}
 
 	var result SearchResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return Asset{}, fmt.Errorf("failed to decode json: %w", err)
+		return nil, fmt.Errorf("failed to decode json: %w", err)
 	}
 
 	if len(result.Pairs) == 0 {
-		return Asset{}, fmt.Errorf("no token found for query: %s", query)
+		return nil, fmt.Errorf("no token found for query: %s", query)
 	}
 
 	// Filter and Sort: prioritize high liquidity and specific chains
@@ -132,7 +142,7 @@ func (c *Client) SearchTopAsset(query string) (Asset, error) {
 	}
 
 	if len(candidates) == 0 {
-		return Asset{}, fmt.Errorf("no usable token result for query: %s", query)
+		return nil, fmt.Errorf("no usable token result for query: %s", query)
 	}
 
 	// 2. Exact symbol/address/name matches always win. Liquidity breaks ties.
@@ -143,20 +153,35 @@ func (c *Client) SearchTopAsset(query string) (Asset, error) {
 		return candidates[i].pair.Liquidity.Usd > candidates[j].pair.Liquidity.Usd
 	})
 
-	topMatch := candidates[0]
+	assets := make([]Asset, 0, limit)
+	seen := make(map[string]struct{})
+	for _, candidate := range candidates {
+		if limit > 0 && len(assets) >= limit {
+			break
+		}
+		key := strings.ToLower(candidate.pair.ChainId + ":" + candidate.token.Address)
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
 
-	// Keep the original chain ID for market-only profiles; map supported EVM
-	// chains to the identifier expected by the source-code adapters.
-	network, contractScanSupported := supportedChains[topMatch.pair.ChainId]
-	if !contractScanSupported {
-		network = topMatch.pair.ChainId
+		// Keep the original chain ID for market-only profiles; map supported EVM
+		// chains to the identifier expected by the source-code adapters.
+		network, contractScanSupported := supportedChains[candidate.pair.ChainId]
+		if !contractScanSupported {
+			network = candidate.pair.ChainId
+		}
+
+		assets = append(assets, Asset{
+			Address: candidate.token.Address, Network: network, Name: candidate.token.Name,
+			Symbol: candidate.token.Symbol, LiquidityUSD: candidate.pair.Liquidity.Usd,
+			VolumeH24: candidate.pair.Volume.H24, ContractScanSupported: contractScanSupported,
+		})
 	}
-
-	return Asset{
-		Address: topMatch.token.Address, Network: network, Name: topMatch.token.Name,
-		Symbol: topMatch.token.Symbol, LiquidityUSD: topMatch.pair.Liquidity.Usd,
-		VolumeH24: topMatch.pair.Volume.H24, ContractScanSupported: contractScanSupported,
-	}, nil
+	if len(assets) == 0 {
+		return nil, fmt.Errorf("no usable token result for query: %s", query)
+	}
+	return assets, nil
 }
 
 func tokenMatches(token Token, query string) bool {

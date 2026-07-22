@@ -1,8 +1,9 @@
 package http
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/0Hoag/cryptocheck-api/internal/scanner"
 	"github.com/0Hoag/cryptocheck-api/pkg/response"
+	"github.com/gin-gonic/gin"
 )
 
 // @Summary Scanner token
@@ -38,4 +39,24 @@ func (h handler) ScanToken(c *gin.Context) {
 	}
 
 	response.OK(c, h.ToScanTokenOutput(token))
+}
+
+// FindCandidates returns the strongest DexScreener matches before the client
+// chooses a symbol that can exist on more than one chain.
+func (h handler) FindCandidates(c *gin.Context) {
+	ctx := c.Request.Context()
+	req, err := h.processRequest(c)
+	if err != nil {
+		h.l.Errorf(ctx, "scanner.delivery.http.FindCandidates: %v", err)
+		response.Error(c, err)
+		return
+	}
+
+	candidates, err := h.uc.FindCandidates(ctx, scanner.FindCandidatesInput{Query: req.Token})
+	if err != nil {
+		h.l.Errorf(ctx, "scanner.delivery.http.FindCandidates: %v", err)
+		response.Error(c, h.mapError(err))
+		return
+	}
+	response.OK(c, candidates)
 }
