@@ -1,0 +1,43 @@
+package usecase
+
+import (
+	"context"
+
+	"github.com/0Hoag/cryptocheck-api/internal/auth"
+	"github.com/0Hoag/cryptocheck-api/internal/users"
+	"github.com/0Hoag/cryptocheck-api/pkg/jwt"
+	"golang.org/x/crypto/bcrypt"
+)
+
+func (uc impleUsecase) Login(ctx context.Context, input auth.LoginInput) (auth.LoginResponse, error) {
+	u, err := uc.userUC.GetOne(ctx, users.Filter{
+		Phone: input.Phone,
+	})
+	if err != nil {
+		uc.l.Errorf(ctx, "auth.usecase.user.Login.GetOne: %v", err)
+		return auth.LoginResponse{}, err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(input.Password)); err != nil {
+		uc.l.Errorf(ctx, "auth.usecase.user.Login.CompareHashAndPassword: %v", err)
+		return auth.LoginResponse{}, auth.ErrInvalidCreds
+	}
+
+	jwtManager := jwt.NewManager(uc.cfg.JWT.SecretKey)
+
+	roles, err := uc.userUC.DetailRole(ctx, u.Roles[0].Hex())
+	if err != nil {
+		uc.l.Errorf(ctx, "auth.usecase.user.Login.GetRoles: %v", err)
+		return auth.LoginResponse{}, err
+	}
+
+	token, err := jwtManager.Generate(u.ID.Hex(), []string{string(roles.Name)}, nil)
+	if err != nil {
+		uc.l.Errorf(ctx, "auth.usecase.user.Login.Login: %v", err)
+		return auth.LoginResponse{}, err
+	}
+
+	return auth.LoginResponse{
+		Token: token,
+	}, nil
+}

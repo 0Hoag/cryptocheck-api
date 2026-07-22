@@ -1,0 +1,6 @@
+{
+    "noti.newsfeed_header": "Bảng tin",
+    "noti.post_created": "{{.TaggerName}} đã đăng một bài viết '{{.Content}}'.",
+    "noti.react_post": "{{.TaggerName}} đã thả cảm xúc vào bài viết '{{.Content}}' của bạn.",
+    "noti.tag_user": "{{.TaggerName}} đã gắn thẻ bạn trong bài viết '{{.Content}}'."
+}

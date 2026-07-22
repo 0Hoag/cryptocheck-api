@@ -1,0 +1,235 @@
+package http
+
+import (
+	"time"
+
+	"github.com/0Hoag/cryptocheck-api/internal/models"
+	"github.com/0Hoag/cryptocheck-api/internal/post"
+	"github.com/0Hoag/cryptocheck-api/pkg/paginator"
+	"github.com/0Hoag/cryptocheck-api/pkg/util"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+type createReq struct {
+	Pin          bool     `json:"pin"`
+	Content      string   `json:"content"`
+	FileIDs      []string `json:"file_ids"`
+	TaggedTarget []string `json:"tagged_target"`
+	Permission   string   `json:"permission"`
+}
+
+func (r createReq) toInput() post.CreateInput {
+	return post.CreateInput{
+		Pin:          r.Pin,
+		Content:      r.Content,
+		FileIDs:      r.FileIDs,
+		TaggedTarget: r.TaggedTarget,
+		Permission:   r.Permission,
+	}
+}
+
+func (r createReq) validate() error {
+	// Validate that at least one of content, file_ids or share_post_id is provided
+	if r.Content == "" && len(r.FileIDs) == 0 {
+		return errWrongBody
+	}
+
+	if len(r.TaggedTarget) > 0 {
+		for _, id := range r.TaggedTarget {
+			if _, err := primitive.ObjectIDFromHex(id); err != nil {
+				return errWrongBody
+			}
+		}
+	}
+
+	if len(r.FileIDs) > 0 {
+		for _, id := range r.FileIDs {
+			if _, err := primitive.ObjectIDFromHex(id); err != nil {
+				return errWrongBody
+			}
+		}
+	}
+
+	switch r.Permission {
+	case string(models.PrivacyTypePrivate), string(models.PrivacyTypePublic):
+		break
+	default:
+		return errWrongBody
+	}
+
+	return nil
+}
+
+type getReq struct {
+	ID  string   `form:"id"`
+	IDs []string `form:"ids[]"`
+	Pin *bool    `form:"pin"`
+}
+
+func (r getReq) validate() error {
+	if len(r.IDs) > 0 {
+		for _, id := range r.IDs {
+			if _, err := primitive.ObjectIDFromHex(id); err != nil {
+				return errWrongQuery
+			}
+		}
+	}
+
+	if r.ID != "" {
+		if _, err := primitive.ObjectIDFromHex(r.ID); err != nil {
+			return errWrongQuery
+		}
+	}
+
+	return nil
+}
+
+func (r getReq) toFilter() post.Filter {
+	filter := post.Filter{
+		ID:  r.ID,
+		IDs: r.IDs,
+	}
+
+	if r.Pin != nil {
+		filter.Pin = *r.Pin
+	}
+
+	return filter
+}
+
+type updateReq struct {
+	ID           string   `json:"id"`
+	Content      string   `json:"content"`
+	FileIDs      []string `json:"file_ids"`
+	TaggedTarget []string `json:"tagged_target"`
+	Permission   string   `json:"permission"`
+}
+
+func (r updateReq) toInput() post.UpdateInput {
+	var taggedTarget []string
+	if len(r.TaggedTarget) > 0 {
+		taggedTarget = r.TaggedTarget
+	}
+
+	return post.UpdateInput{
+		ID:           r.ID,
+		Content:      r.Content,
+		FileIDs:      r.FileIDs,
+		TaggedTarget: taggedTarget,
+		Permission:   r.Permission,
+	}
+}
+
+func (r updateReq) validate() error {
+	if _, err := primitive.ObjectIDFromHex(r.ID); err != nil {
+		return errWrongBody
+	}
+
+	// Validate that at least one of content or file_ids is provided
+	if r.Content == "" && len(r.FileIDs) == 0 {
+		return errWrongBody
+	}
+
+	idArrays := [][]string{
+		r.FileIDs,
+		r.TaggedTarget,
+	}
+
+	// Add TaggedTarget arrays if not nil
+	if len(r.TaggedTarget) > 0 {
+		idArrays = append(idArrays, r.TaggedTarget)
+	}
+
+	for _, ids := range idArrays {
+		for _, id := range ids {
+			if _, err := primitive.ObjectIDFromHex(id); err != nil {
+				return errWrongBody
+			}
+		}
+	}
+
+	switch r.Permission {
+	case string(models.PrivacyTypePrivate), string(models.PrivacyTypePublic):
+		break
+	default:
+		return errWrongBody
+	}
+
+	return nil
+}
+
+func (h handler) newPostDataResp(p models.Post) postDataResp {
+	return postDataResp{
+		ID:            p.ID.Hex(),
+		Title:         p.Title,
+		TitleEn:       p.TitleEn,
+		Content:       p.Content,
+		FullContent:   p.FullContent,
+		FullContentEn: p.FullContentEn,
+		Pin:           p.Pin,
+		FileIDs:       util.ObjectIDsToHex(p.FileIDs),
+		TaggedTarget:  util.ObjectIDsToHex(p.TaggedTarget),
+		AuthorID:      p.AuthorID.Hex(),
+		SourceURL:     p.SourceURL,
+		CreatedAt:     p.CreatedAt,
+		UpdatedAt:     p.UpdatedAt,
+	}
+}
+
+type detailResp struct {
+	postDataResp
+}
+
+func (h handler) newDetailResp(p models.Post) detailResp {
+	return detailResp{
+		postDataResp: h.newPostDataResp(p),
+	}
+}
+
+type postDataResp struct {
+	ID            string    `json:"id"`
+	Title         string    `json:"title"`
+	TitleEn       string    `json:"title_en"`
+	Content       string    `json:"content"`
+	FullContent   string    `json:"full_content"`
+	FullContentEn string    `json:"full_content_en"`
+	FileIDs       []string  `json:"file_ids"`
+	TaggedTarget  []string  `json:"tagged_target"`
+	Pin           bool      `json:"pin"`
+	AuthorID      string    `json:"author_id"`
+	SourceURL     string    `json:"source_url"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+type postItem struct {
+	postDataResp
+}
+
+type getMetaResponse struct {
+	paginator.PaginatorResponse
+}
+
+type getResp struct {
+	Items []postItem      `json:"items"`
+	Meta  getMetaResponse `json:"meta"`
+}
+
+func (h handler) newGetResp(out post.GetOutput) getResp {
+	items := make([]postItem, 0, len(out.Posts))
+
+	for _, p := range out.Posts {
+		item := postItem{
+			postDataResp: h.newPostDataResp(p),
+		}
+
+		items = append(items, item)
+	}
+
+	return getResp{
+		Items: items,
+		Meta: getMetaResponse{
+			PaginatorResponse: out.Paginator.ToResponse(),
+		},
+	}
+}

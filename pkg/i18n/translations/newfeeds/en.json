@@ -1,0 +1,6 @@
+{
+    "noti.newsfeed_header": "NewsFeed",
+    "noti.post_created": "{{.TaggerName}} has created a post '{{.PostTitle}}'.",
+    "noti.react_post": "{{.TaggerName}} has reacted to your post '{{.PostTitle}}'.",
+    "noti.tag_user": "{{.TaggerName}} has tagged you in the post '{{.PostTitle}}'."
+}

@@ -1,0 +1,26 @@
+package repository
+
+import (
+	"github.com/0Hoag/cryptocheck-api/pkg/paginator"
+)
+
+// Post
+type CreateOptions struct {
+	FolloweeID string
+}
+
+type Filter struct {
+	ID         string
+	IDs        []string
+	AuthorID   string
+	FolloweeID string
+}
+
+type ListOptions struct {
+	Filter
+}
+
+type GetOptions struct {
+	Filter
+	PagQuery paginator.PaginatorQuery
+}

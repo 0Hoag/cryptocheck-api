@@ -1,0 +1,6 @@
+{
+    "noti.newsfeed_header": "ニュースフィード",
+    "noti.post_created": "{{.TaggerName}}が「{{.PostTitle}}」という投稿を作成しました。",
+    "noti.react_post": "{{.TaggerName}}があなたの投稿「{{.PostTitle}}」にリアクションしました。",
+    "noti.tag_user": "{{.TaggerName}}が投稿「{{.PostTitle}}」であなたをタグ付けしました。"
+}

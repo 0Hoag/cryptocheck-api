@@ -1,0 +1,15 @@
+# Caddyfile
+cryptocheck.click, www.cryptocheck.click {
+    # Frontend
+    reverse_proxy frontend:3000
+
+    # Backend API
+    handle /api/* {
+        reverse_proxy backend-api:8080
+    }
+    
+    # Swagger UI (Optional)
+    handle /swagger/* {
+        reverse_proxy backend-api:8080
+    }
+}

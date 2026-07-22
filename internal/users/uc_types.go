@@ -1,0 +1,50 @@
+package users
+
+import (
+	"time"
+
+	"github.com/0Hoag/cryptocheck-api/internal/models"
+	"github.com/0Hoag/cryptocheck-api/pkg/paginator"
+)
+
+// Post
+type CreateInput struct {
+	UserName    string
+	AvatarURL   string
+	Phone       string
+	Password    string
+	Birthday    time.Time
+	Roles       []string
+	Permissions []string
+}
+
+type Filter struct {
+	ID       string
+	IDs      []string
+	UserName string
+	Phone    string
+}
+
+type GetOneInput struct {
+	Filter
+}
+
+type ListInput struct {
+	Filter
+}
+
+type GetInput struct {
+	Filter
+	PagQuery paginator.PaginatorQuery
+}
+
+type GetOutput struct {
+	Users     []models.User
+	Paginator paginator.Paginator
+}
+
+type UpdateInput struct {
+	ID        string
+	UserName  string
+	AvatarURL string
+}
