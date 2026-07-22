@@ -54,6 +54,11 @@ type EngagementCounts struct {
 	CommentCount  int64
 }
 
+type AuthorSummary struct {
+	Username  string
+	AvatarURL string
+}
+
 // Reaction
 type CreateReactionOptions struct {
 	PostID string

@@ -24,6 +24,7 @@ type PostRepo interface {
 	Update(ctx context.Context, sc models.Scope, opts UpdateOptions) error
 	Delete(ctx context.Context, sc models.Scope, id string) error
 	GetEngagementCounts(ctx context.Context, postIDs []primitive.ObjectID) (map[primitive.ObjectID]EngagementCounts, error)
+	GetAuthorSummaries(ctx context.Context, authorIDs []primitive.ObjectID) (map[primitive.ObjectID]AuthorSummary, error)
 }
 
 type ReactionRepo interface {

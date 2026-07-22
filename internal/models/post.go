@@ -24,8 +24,10 @@ type Post struct {
 	UpdatedAt time.Time  `bson:"updated_at"`
 	DeletedAt *time.Time `bson:"deleted_at,omitempty"`
 
-	ReactionCount int64 `bson:"-"`
-	CommentCount  int64 `bson:"-"`
+	ReactionCount   int64  `bson:"-"`
+	CommentCount    int64  `bson:"-"`
+	AuthorName      string `bson:"-"`
+	AuthorAvatarURL string `bson:"-"`
 }
 
 type PrivacyType string

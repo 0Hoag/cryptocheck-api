@@ -55,7 +55,7 @@ curl -fsS 'http://localhost:8080/api/v1/news-feed/scanner?token=ENA&lang=vi'
 - [ ] Add table-driven handler/usecase tests for post, reaction and comment ownership.
 - [x] Enforce one reaction per user/post/type with a Mongo unique index and duplicate-safe API response (integration tested).
 - [x] Return aggregate reaction/comment counts with feed posts to remove client N+1 calls (integration tested).
-- [ ] Return sanitized author summaries with feed posts.
+- [x] Return sanitized author summaries with feed posts (integration tested; no phone exposure).
 - [ ] Add post visibility rules (public, followers, group-only, private) and authorization tests.
 - [ ] Add pagination, sorting and rate limits appropriate for a public community.
 

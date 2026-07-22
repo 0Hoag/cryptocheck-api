@@ -182,6 +182,7 @@ func (h handler) newPostDataResp(p models.Post) postDataResp {
 		UpdatedAt:     p.UpdatedAt,
 		ReactionCount: p.ReactionCount,
 		CommentCount:  p.CommentCount,
+		Author:        authorDataResp{ID: p.AuthorID.Hex(), Username: p.AuthorName, AvatarURL: p.AuthorAvatarURL},
 	}
 }
 
@@ -196,21 +197,28 @@ func (h handler) newDetailResp(p models.Post) detailResp {
 }
 
 type postDataResp struct {
-	ID            string    `json:"id"`
-	Title         string    `json:"title"`
-	TitleEn       string    `json:"title_en"`
-	Content       string    `json:"content"`
-	FullContent   string    `json:"full_content"`
-	FullContentEn string    `json:"full_content_en"`
-	FileIDs       []string  `json:"file_ids"`
-	TaggedTarget  []string  `json:"tagged_target"`
-	Pin           bool      `json:"pin"`
-	AuthorID      string    `json:"author_id"`
-	SourceURL     string    `json:"source_url"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
-	ReactionCount int64     `json:"reaction_count"`
-	CommentCount  int64     `json:"comment_count"`
+	ID            string         `json:"id"`
+	Title         string         `json:"title"`
+	TitleEn       string         `json:"title_en"`
+	Content       string         `json:"content"`
+	FullContent   string         `json:"full_content"`
+	FullContentEn string         `json:"full_content_en"`
+	FileIDs       []string       `json:"file_ids"`
+	TaggedTarget  []string       `json:"tagged_target"`
+	Pin           bool           `json:"pin"`
+	AuthorID      string         `json:"author_id"`
+	SourceURL     string         `json:"source_url"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+	ReactionCount int64          `json:"reaction_count"`
+	CommentCount  int64          `json:"comment_count"`
+	Author        authorDataResp `json:"author"`
+}
+
+type authorDataResp struct {
+	ID        string `json:"id"`
+	Username  string `json:"username"`
+	AvatarURL string `json:"avatar_url"`
 }
 
 type postItem struct {

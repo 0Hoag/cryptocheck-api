@@ -116,6 +116,21 @@ func (uc impleUsecase) Get(ctx context.Context, sc models.Scope, input post.GetI
 			posts[index].CommentCount = count.CommentCount
 		}
 	}
+	authorIDs := make([]primitive.ObjectID, 0, len(posts))
+	for _, item := range posts {
+		authorIDs = append(authorIDs, item.AuthorID)
+	}
+	authors, err := uc.repo.GetAuthorSummaries(ctx, authorIDs)
+	if err != nil {
+		uc.l.Errorf(ctx, "post.usecase.Get.GetAuthorSummaries: %v", err)
+		return post.GetOutput{}, err
+	}
+	for index := range posts {
+		if author, ok := authors[posts[index].AuthorID]; ok {
+			posts[index].AuthorName = author.Username
+			posts[index].AuthorAvatarURL = author.AvatarURL
+		}
+	}
 	return post.GetOutput{
 		Posts:     posts,
 		Paginator: paginator,
