@@ -30,3 +30,24 @@ func New(l log.Logger, conn rabbitmq.Connection) Producer {
 		conn: conn,
 	}
 }
+
+// NewNoop returns a producer that safely discards asynchronous messages. It is
+// used only when RabbitMQ is unavailable so the HTTP API can still serve CRUD
+// requests without dereferencing an empty AMQP connection.
+func NewNoop() Producer {
+	return noopProducer{}
+}
+
+type noopProducer struct{}
+
+func (noopProducer) PublishDeletePostRelationMsg(context.Context, rabb.DeletePostRelationMsg) error {
+	return nil
+}
+
+func (noopProducer) PublishNotiMsg(context.Context, rabb.PublishNotiMsg) error {
+	return nil
+}
+
+func (noopProducer) Run() error { return nil }
+
+func (noopProducer) Close() {}

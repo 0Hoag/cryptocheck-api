@@ -1,6 +1,8 @@
 package httpserver
 
 import (
+	"context"
+
 	"github.com/0Hoag/cryptocheck-api/config"
 	_ "github.com/0Hoag/cryptocheck-api/docs"
 	"github.com/0Hoag/cryptocheck-api/internal/adapters/dexscreener"
@@ -45,10 +47,16 @@ func (srv HTTPServer) mapHandlers() error {
 
 	cfg, _ := config.Load()
 
-	// Producer
-	postProd := prod.New(srv.l, srv.amqpConn)
-	if err := postProd.Run(); err != nil {
-		return err
+	// RabbitMQ is optional in local development. Avoid opening a channel on an
+	// empty AMQP connection when the broker is unavailable.
+	postProd := prod.NewNoop()
+	if srv.amqpConn.IsReady() {
+		postProd = prod.New(srv.l, srv.amqpConn)
+		if err := postProd.Run(); err != nil {
+			return err
+		}
+	} else {
+		srv.l.Warnf(context.Background(), "RabbitMQ unavailable; asynchronous notifications are disabled")
 	}
 
 	// Repositories
