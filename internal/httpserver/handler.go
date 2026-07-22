@@ -31,6 +31,7 @@ import (
 	authHTTP "github.com/0Hoag/cryptocheck-api/internal/auth/delivery/http"
 	authUC "github.com/0Hoag/cryptocheck-api/internal/auth/usecase"
 
+	prelaunchHTTP "github.com/0Hoag/cryptocheck-api/internal/prelaunch/delivery/http"
 	scanHTTP "github.com/0Hoag/cryptocheck-api/internal/scanner/delivery/http"
 	scanUC "github.com/0Hoag/cryptocheck-api/internal/scanner/usecase"
 
@@ -100,6 +101,7 @@ func (srv HTTPServer) mapHandlers() error {
 	followHTTP.MapRoutes(newsFeedGroup.Group("/follow"), followH, mw)
 	commentHTTP.MapRoutes(newsFeedGroup.Group("/comment"), commentH, mw)
 	scanHTTP.MapRoutes(newsFeedGroup.Group("/scanner"), scanH, mw)
+	prelaunchHTTP.MapRoutes(newsFeedGroup.Group("/prelaunch-projects"), srv.db, mw)
 
 	return nil
 }
