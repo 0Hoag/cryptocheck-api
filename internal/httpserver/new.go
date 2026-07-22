@@ -1,7 +1,6 @@
 package httpserver
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/0Hoag/cryptocheck-api/internal/adapters/dexscreener"
 	"github.com/0Hoag/cryptocheck-api/internal/adapters/etherscan"
 	"github.com/0Hoag/cryptocheck-api/internal/core/scanner"
@@ -10,6 +9,7 @@ import (
 	pkgLog "github.com/0Hoag/cryptocheck-api/pkg/log"
 	pkgMongo "github.com/0Hoag/cryptocheck-api/pkg/mongo"
 	"github.com/0Hoag/cryptocheck-api/pkg/rabbitmq"
+	"github.com/gin-gonic/gin"
 )
 
 const productionMode = "production"
@@ -30,7 +30,10 @@ type HTTPServer struct {
 	secretConfig SecretConfig
 
 	// Usecase
-	scannerUC scanDomain.UseCase
+	scannerUC  scanDomain.UseCase
+	scanEngine *scanner.Engine
+	dexClient  *dexscreener.Client
+	ethClient  *etherscan.Client
 }
 
 type Config struct {
@@ -98,6 +101,9 @@ func New(l pkgLog.Logger, cfg Config) *HTTPServer {
 		encrypter:    cfg.Encrypter,
 		secretConfig: cfg.SecretConfig,
 
-		scannerUC: cfg.ScannerUC,
+		scannerUC:  cfg.ScannerUC,
+		scanEngine: cfg.ScanEngine,
+		dexClient:  cfg.DexClient,
+		ethClient:  cfg.EthClient,
 	}
 }

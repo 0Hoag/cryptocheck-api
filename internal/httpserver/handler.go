@@ -2,13 +2,10 @@ package httpserver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/0Hoag/cryptocheck-api/config"
 	_ "github.com/0Hoag/cryptocheck-api/docs"
-	"github.com/0Hoag/cryptocheck-api/internal/adapters/dexscreener"
-	"github.com/0Hoag/cryptocheck-api/internal/adapters/etherscan"
-	"github.com/0Hoag/cryptocheck-api/internal/adapters/gemini"
-	"github.com/0Hoag/cryptocheck-api/internal/core/scanner"
 	prod "github.com/0Hoag/cryptocheck-api/internal/delivery/rabbitmq/producer"
 	"github.com/0Hoag/cryptocheck-api/pkg/jwt"
 	swaggerFiles "github.com/swaggo/files"
@@ -43,9 +40,11 @@ import (
 
 func (srv HTTPServer) mapHandlers() error {
 	srv.gin.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("load application configuration: %w", err)
+	}
 	jwtManager := jwt.NewManager(srv.jwtSecretKey)
-
-	cfg, _ := config.Load()
 
 	// RabbitMQ is optional in local development. Avoid opening a channel on an
 	// empty AMQP connection when the broker is unavailable.
@@ -65,31 +64,19 @@ func (srv HTTPServer) mapHandlers() error {
 	followRepo := followMongo.New(srv.l, srv.db)
 	commentRepo := commentMongo.New(srv.l, srv.db)
 
-	// Scanner Dependencies
-	// Gemini is optional: the scanner falls back to its regex engine when no
-	// API key is configured. Creating a Gemini client with an empty key exits
-	// the whole API process, so only initialize it when a key is present.
-	var geminiClient *gemini.Client
-	if cfg.Gemini.APIKey != "" {
-		geminiClient = gemini.NewClient(cfg.Gemini.APIKey)
-	}
-	engine := scanner.NewEngine(geminiClient)
-	dexClient := dexscreener.NewClient()
-	ethClient := etherscan.NewClient(map[string]string{
-		etherscan.NetworkETH:      cfg.Scanner.EtherscanAPIKey,
-		etherscan.NetworkBSC:      cfg.Scanner.BscScanAPIKey,
-		etherscan.NetworkBase:     cfg.Scanner.BaseScanAPIKey,
-		etherscan.NetworkArbitrum: cfg.Scanner.ArbitrumScanAPIKey,
-		etherscan.NetworkPolygon:  cfg.Scanner.PolygonScanAPIKey,
-	})
-
 	// Usecases
 	userUC := userUC.New(srv.l, userRepo)
 	postUC := postUC.New(srv.l, postProd, userUC, postRepo)
 	followUC := followUC.New(srv.l, userUC, followRepo)
 	commentUC := commentUC.New(srv.l, postUC, commentRepo)
 	authUC := authUC.New(srv.l, cfg, userUC)
-	scanUC := scanUC.New(srv.l, engine, dexClient, ethClient)
+	scanUsecase := srv.scannerUC
+	if scanUsecase == nil {
+		if srv.scanEngine == nil || srv.dexClient == nil || srv.ethClient == nil {
+			return fmt.Errorf("scanner dependencies are not configured")
+		}
+		scanUsecase = scanUC.New(srv.l, srv.scanEngine, srv.dexClient, srv.ethClient)
+	}
 
 	// Handlers
 	userH := userHTTP.New(srv.l, userUC)
@@ -97,7 +84,7 @@ func (srv HTTPServer) mapHandlers() error {
 	followH := followHTTP.New(srv.l, followUC)
 	commentH := commentHTTP.New(srv.l, commentUC)
 	authH := authHTTP.New(srv.l, authUC)
-	scanH := scanHTTP.New(srv.l, scanUC)
+	scanH := scanHTTP.New(srv.l, scanUsecase)
 
 	// Middlewares
 	mw := middleware.New(srv.l, userUC, jwtManager, srv.encrypter, srv.internalKey)

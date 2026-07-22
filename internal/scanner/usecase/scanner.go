@@ -17,12 +17,13 @@ func (uc ScannerUC) ScanToken(ctx context.Context, input scanDomain.ScanTokenInp
 	// 1. Resolve Symbol if needed
 	isAddress := (strings.HasPrefix(query, "0x") && len(query) == 42) || query == "0xMOCK"
 	if !isAddress {
-		foundAddr, _, foundName, err := uc.dexClient.SearchTopToken(query)
+		foundAddr, foundNetwork, foundName, err := uc.dexClient.SearchTopToken(query)
 		if err != nil {
 			uc.l.Errorf(ctx, "Token not found on DexScreener: %v", err)
 			return scanDomain.ScanTokenOutput{}, scanDomain.ErrTokenNotFound
 		}
 		address = foundAddr
+		network = foundNetwork
 		name = foundName
 	}
 
@@ -31,13 +32,7 @@ func (uc ScannerUC) ScanToken(ctx context.Context, input scanDomain.ScanTokenInp
 	var err error
 	var networkFound string
 
-	networks := []string{
-		etherscan.NetworkETH,
-		etherscan.NetworkBSC,
-		etherscan.NetworkBase,
-		etherscan.NetworkArbitrum,
-		etherscan.NetworkPolygon,
-	}
+	networks := networksToTry(network)
 
 	for _, net := range networks {
 		sourceCode, name, err = uc.ethClient.GetContractSource(net, address)
@@ -65,4 +60,18 @@ func (uc ScannerUC) ScanToken(ctx context.Context, input scanDomain.ScanTokenInp
 		Issues:       result.Issues,
 		SafeFeatures: result.SafeFeatures,
 	}, nil
+}
+
+func networksToTry(preferred string) []string {
+	all := []string{etherscan.NetworkETH, etherscan.NetworkBSC, etherscan.NetworkBase, etherscan.NetworkArbitrum, etherscan.NetworkPolygon}
+	result := make([]string, 0, len(all))
+	if preferred != "" {
+		result = append(result, preferred)
+	}
+	for _, network := range all {
+		if network != preferred {
+			result = append(result, network)
+		}
+	}
+	return result
 }
