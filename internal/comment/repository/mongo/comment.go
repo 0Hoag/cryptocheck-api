@@ -7,6 +7,8 @@ import (
 	"github.com/0Hoag/cryptocheck-api/internal/models"
 	"github.com/0Hoag/cryptocheck-api/pkg/mongo"
 	"github.com/0Hoag/cryptocheck-api/pkg/paginator"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -90,7 +92,7 @@ func (repo impleRepository) List(ctx context.Context, sc models.Scope, opts repo
 	}
 
 	var ms []models.Comment
-	err = cur.All(ctx, ms)
+	err = cur.All(ctx, &ms)
 	if err != nil {
 		repo.l.Errorf(ctx, "comments.mongo.List.All: %v", err)
 		return []models.Comment{}, err
@@ -140,16 +142,21 @@ func (repo impleRepository) Get(ctx context.Context, sc models.Scope, opts repos
 func (repo impleRepository) Update(ctx context.Context, sc models.Scope, opts repository.UpdateOptions) (models.Comment, error) {
 	col := repo.getCommentCollection()
 
-	m, filter, err := repo.buildUpdateModels(ctx, sc, opts)
+	m, update, err := repo.buildUpdateModels(ctx, sc, opts)
 	if err != nil {
 		repo.l.Errorf(ctx, "comments.mongo.Update.buildUpdateModels: %v", err)
-		return models.Comment{}, nil
+		return models.Comment{}, err
 	}
 
-	_, err = col.UpdateOne(ctx, filter, &m)
+	authorID, err := primitive.ObjectIDFromHex(sc.UserID)
+	if err != nil {
+		return models.Comment{}, err
+	}
+	filter := mongo.BuildQueryWithSoftDelete(bson.M{"_id": m.ID, "author_id": authorID})
+	_, err = col.UpdateOne(ctx, filter, update)
 	if err != nil {
 		repo.l.Errorf(ctx, "comments.mongo.Update.UpdateOne: %v", err)
-		return models.Comment{}, nil
+		return models.Comment{}, err
 	}
 
 	return m, nil

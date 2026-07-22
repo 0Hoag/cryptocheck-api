@@ -45,7 +45,7 @@ func (repo impleRepository) buildGetOneQuery(ctx context.Context, sc models.Scop
 		}
 	}
 
-	mIDs := make([]primitive.ObjectID, len(f.IDs))
+	mIDs := make([]primitive.ObjectID, 0, len(f.IDs))
 	if len(f.IDs) > 0 {
 		for _, id := range f.IDs {
 			mID, err := primitive.ObjectIDFromHex(id)
@@ -83,7 +83,7 @@ func (repo impleRepository) buildListQuery(ctx context.Context, sc models.Scope,
 		}
 	}
 
-	mIDs := make([]primitive.ObjectID, len(opts.IDs))
+	mIDs := make([]primitive.ObjectID, 0, len(opts.IDs))
 	if len(opts.IDs) > 0 {
 		for _, id := range opts.IDs {
 			mID, err := primitive.ObjectIDFromHex(id)
@@ -119,7 +119,7 @@ func (repo impleRepository) buildGetQuery(ctx context.Context, sc models.Scope, 
 		}
 	}
 
-	mIDs := make([]primitive.ObjectID, len(opts.IDs))
+	mIDs := make([]primitive.ObjectID, 0, len(opts.IDs))
 	if len(opts.IDs) > 0 {
 		for _, id := range opts.IDs {
 			mID, err := primitive.ObjectIDFromHex(id)

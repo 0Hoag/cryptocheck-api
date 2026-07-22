@@ -51,6 +51,7 @@ curl -fsS 'http://localhost:8080/api/v1/news-feed/scanner?token=ENA&lang=vi'
 - [x] Audit flow passed: create post → like → comment → list one reaction/comment → delete all test data.
 - [x] Post feed accepts a validated `author_id` filter for profile/community views.
 - [x] Post update and delete enforce ownership and return 403 for another user's post.
+- [x] Comment update/delete enforce ownership, return the persisted update, and return 403 for another user (integration tested).
 - [ ] Add table-driven handler/usecase tests for post, reaction and comment ownership.
 - [x] Enforce one reaction per user/post/type with a Mongo unique index and duplicate-safe API response (integration tested).
 - [ ] Return author summary and aggregate reaction/comment counts with feed posts to remove client N+1 calls.

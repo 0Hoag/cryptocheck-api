@@ -51,6 +51,13 @@ func (repo impleRepository) buildUpdateModels(ctx context.Context, sc models.Sco
 	}
 
 	set["updated_at"] = now
+	opts.Comment.UpdatedAt = now
+	if opts.Content != "" {
+		opts.Comment.Content = opts.Content
+	}
+	if len(opts.Attach) > 0 {
+		opts.Comment.Attachments = opts.Attach
+	}
 
 	return opts.Comment, bson.M{"$set": set}, nil
 }

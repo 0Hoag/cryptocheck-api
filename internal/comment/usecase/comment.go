@@ -81,6 +81,9 @@ func (uc impleUsecase) Update(ctx context.Context, sc models.Scope, input commen
 		uc.l.Errorf(ctx, "comment.usecase.Update.Detail: %v", err)
 		return models.Comment{}, err
 	}
+	if m.AuthorID.Hex() != sc.UserID {
+		return models.Comment{}, comment.ErrPermissionDenied
+	}
 
 	m, err = uc.repo.Update(ctx, sc, repository.UpdateOptions{
 		Comment: m,
@@ -96,10 +99,21 @@ func (uc impleUsecase) Update(ctx context.Context, sc models.Scope, input commen
 }
 
 func (uc impleUsecase) Delete(ctx context.Context, sc models.Scope, id string) error {
-	err := uc.repo.Delete(ctx, sc, id)
+	comment, err := uc.repo.Detail(ctx, models.Scope{}, id)
+	if err != nil {
+		uc.l.Errorf(ctx, "comment.usecase.Delete.Detail: %v", err)
+		return err
+	}
+	if comment.AuthorID.Hex() != sc.UserID {
+		return commentDomainPermissionDenied()
+	}
+
+	err = uc.repo.Delete(ctx, sc, id)
 	if err != nil {
 		uc.l.Errorf(ctx, "comment.usecase.Delete.Delete: %v", err)
 		return err
 	}
 	return nil
 }
+
+func commentDomainPermissionDenied() error { return comment.ErrPermissionDenied }

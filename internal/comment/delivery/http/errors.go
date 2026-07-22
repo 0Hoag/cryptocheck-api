@@ -11,13 +11,16 @@ var (
 	errWrongBody            = pkgErrors.NewHTTPError(140003, "Wrong body")
 
 	// Comment errors
-	errCommentNotFound = pkgErrors.NewHTTPError(143004, "Comment not found")
+	errCommentNotFound  = pkgErrors.NewHTTPError(143004, "Comment not found")
+	errPermissionDenied = pkgErrors.NewForbiddenHTTPError()
 )
 
 func (h handler) mapError(err error) error {
 	switch err {
 	case comment.ErrCommentNotFound:
 		return errCommentNotFound
+	case comment.ErrPermissionDenied:
+		return errPermissionDenied
 	default:
 		return err
 	}
