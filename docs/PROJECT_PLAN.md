@@ -52,7 +52,7 @@ curl -fsS 'http://localhost:8080/api/v1/news-feed/scanner?token=ENA&lang=vi'
 - [x] Post feed accepts a validated `author_id` filter for profile/community views.
 - [x] Post update and delete enforce ownership and return 403 for another user's post.
 - [ ] Add table-driven handler/usecase tests for post, reaction and comment ownership.
-- [ ] Enforce one reaction per user/post/type, with a database unique index and toggle-safe API response.
+- [x] Enforce one reaction per user/post/type with a Mongo unique index and duplicate-safe API response (integration tested).
 - [ ] Return author summary and aggregate reaction/comment counts with feed posts to remove client N+1 calls.
 - [ ] Add post visibility rules (public, followers, group-only, private) and authorization tests.
 - [ ] Add pagination, sorting and rate limits appropriate for a public community.

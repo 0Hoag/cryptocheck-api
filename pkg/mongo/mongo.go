@@ -43,6 +43,7 @@ type Collection interface {
 	Aggregate(ctx context.Context, pipeline interface{}) (Cursor, error)
 	UpdateOne(ctx context.Context, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error)
 	UpdateMany(ctx context.Context, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error)
+	CreateIndex(ctx context.Context, keys interface{}, opts *options.IndexOptions) (string, error)
 }
 
 //go:generate mockery --name=SingleResult --output=mocks --case=underscore
@@ -201,6 +202,10 @@ func (mc *mongoCollection) Aggregate(ctx context.Context, pipeline interface{}) 
 
 func (mc *mongoCollection) UpdateMany(ctx context.Context, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
 	return mc.coll.UpdateMany(ctx, filter, update, opts[:]...)
+}
+
+func (mc *mongoCollection) CreateIndex(ctx context.Context, keys interface{}, opts *options.IndexOptions) (string, error) {
+	return mc.coll.Indexes().CreateOne(ctx, mongo.IndexModel{Keys: keys, Options: opts})
 }
 
 func (mc *mongoCollection) CountDocuments(ctx context.Context, filter interface{}, opts ...*options.CountOptions) (int64, error) {

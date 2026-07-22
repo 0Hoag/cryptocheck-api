@@ -16,7 +16,9 @@ var (
 	errPermissionDenied    = pkgErrors.NewForbiddenHTTPError()
 
 	// Reaction errors
-	errReactionNotFound = pkgErrors.NewHTTPError(143006, "Reaction not found")
+	errReactionNotFound      = pkgErrors.NewHTTPError(143006, "Reaction not found")
+	errReactionAlreadyExists = pkgErrors.NewHTTPError(143010, "Reaction already exists")
+	errInvalidReactionType   = pkgErrors.NewHTTPError(143011, "Invalid reaction type")
 
 	// Comment errors
 	errCommentNotFound = pkgErrors.NewHTTPError(143007, "Comment not found")
@@ -30,6 +32,10 @@ func (h handler) mapError(err error) error {
 		return errPostVersionNotFound
 	case post.ErrReactionNotFound:
 		return errReactionNotFound
+	case post.ErrReactionAlreadyExists:
+		return errReactionAlreadyExists
+	case post.ErrInvalidReactionType:
+		return errInvalidReactionType
 	case post.ErrCommentNotFound:
 		return errCommentNotFound
 	case post.ErrPermissionDenied:

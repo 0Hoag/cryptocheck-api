@@ -5,6 +5,8 @@ import "errors"
 var wantErrors = []error{
 	ErrPostNotFound,
 	ErrRequiredField,
+	ErrReactionAlreadyExists,
+	ErrInvalidReactionType,
 }
 
 var (
@@ -22,7 +24,9 @@ var (
 	ErrPostVersionNotFound = errors.New("post version not found")
 
 	// emotion
-	ErrReactionNotFound = errors.New("reaction not found")
+	ErrReactionNotFound      = errors.New("reaction not found")
+	ErrReactionAlreadyExists = errors.New("reaction already exists")
+	ErrInvalidReactionType   = errors.New("invalid reaction type")
 
 	// comment
 	ErrCommentNotFound = errors.New("Comment not found")

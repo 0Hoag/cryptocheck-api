@@ -46,7 +46,7 @@ func (repo impleRepository) buildGetOneReactionQuery(ctx context.Context, sc mod
 	}
 
 	if f.UserID != "" {
-		filter["user_id"], err = primitive.ObjectIDFromHex(f.UserID)
+		filter["author_id"], err = primitive.ObjectIDFromHex(f.UserID)
 		if err != nil {
 			repo.l.Errorf(ctx, "reaction.mongo.buildGetOneReactionQuery.ObjectIDFromHex: %v", err)
 			return bson.M{}, err
@@ -80,7 +80,7 @@ func (repo impleRepository) buildListReactionQuery(ctx context.Context, sc model
 		}
 	}
 
-	mIDs := make([]primitive.ObjectID, len(opts.IDs))
+	mIDs := make([]primitive.ObjectID, 0, len(opts.IDs))
 	if len(opts.IDs) > 0 {
 		for _, id := range opts.IDs {
 			mID, err := primitive.ObjectIDFromHex(id)
@@ -94,7 +94,7 @@ func (repo impleRepository) buildListReactionQuery(ctx context.Context, sc model
 	}
 
 	if opts.UserID != "" {
-		filter["user_id"], err = primitive.ObjectIDFromHex(opts.UserID)
+		filter["author_id"], err = primitive.ObjectIDFromHex(opts.UserID)
 		if err != nil {
 			repo.l.Errorf(ctx, "reaction.mongo.buildListReactionQuery.ObjectIDFromHex: %v", err)
 			return bson.M{}, err
@@ -128,7 +128,7 @@ func (repo impleRepository) buildGetReactionQuery(ctx context.Context, sc models
 		}
 	}
 
-	mIDs := make([]primitive.ObjectID, len(opts.IDs))
+	mIDs := make([]primitive.ObjectID, 0, len(opts.IDs))
 	if len(opts.IDs) > 0 {
 		for _, id := range opts.IDs {
 			mID, err := primitive.ObjectIDFromHex(id)
@@ -142,7 +142,7 @@ func (repo impleRepository) buildGetReactionQuery(ctx context.Context, sc models
 	}
 
 	if opts.UserID != "" {
-		filter["user_id"], err = primitive.ObjectIDFromHex(opts.UserID)
+		filter["author_id"], err = primitive.ObjectIDFromHex(opts.UserID)
 		if err != nil {
 			repo.l.Errorf(ctx, "reaction.mongo.buildGetReactionQuery.ObjectIDFromHex: %v", err)
 			return bson.M{}, err

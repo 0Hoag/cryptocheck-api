@@ -9,10 +9,27 @@ import (
 )
 
 func (uc impleUsecase) CreateReaction(ctx context.Context, sc models.Scope, input post.CreateReactionInput) (models.Reaction, error) {
+	if input.Type != models.LikeReaction && input.Type != models.LoveReaction {
+		return models.Reaction{}, post.ErrInvalidReactionType
+	}
+
 	_, err := uc.repo.Detail(ctx, sc, input.PostID)
 	if err != nil {
 		uc.l.Errorf(ctx, "post.usecase.CreateReaction.Detail: %v", err)
 		return models.Reaction{}, err
+	}
+
+	existing, err := uc.repo.ListReaction(ctx, sc, repository.ListReactionOptions{FilterReaction: repository.FilterReaction{
+		PostID: input.PostID,
+		UserID: sc.UserID,
+		Type:   input.Type,
+	}})
+	if err != nil {
+		uc.l.Errorf(ctx, "post.usecase.CreateReaction.ListReaction: %v", err)
+		return models.Reaction{}, err
+	}
+	if len(existing) > 0 {
+		return models.Reaction{}, post.ErrReactionAlreadyExists
 	}
 
 	reaction, err := uc.repo.CreateReaction(ctx, sc, repository.CreateReactionOptions{

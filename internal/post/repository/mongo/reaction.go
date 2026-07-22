@@ -4,9 +4,11 @@ import (
 	"context"
 
 	"github.com/0Hoag/cryptocheck-api/internal/models"
+	"github.com/0Hoag/cryptocheck-api/internal/post"
 	"github.com/0Hoag/cryptocheck-api/internal/post/repository"
 	"github.com/0Hoag/cryptocheck-api/pkg/mongo"
 	"github.com/0Hoag/cryptocheck-api/pkg/paginator"
+	driverMongo "go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -18,8 +20,12 @@ func (repo impleRepository) getReactionCollection() mongo.Collection {
 	return repo.db.Collection(ReactionCollection)
 }
 
-func (repo impleRepository) CreateReaction(ctx context.Context, sc models.Scope, opts repository.CreateReactionOptions) (models.Reaction, error) {
+func (repo *impleRepository) CreateReaction(ctx context.Context, sc models.Scope, opts repository.CreateReactionOptions) (models.Reaction, error) {
 	col := repo.getReactionCollection()
+	if err := repo.ensureReactionIndex(ctx); err != nil {
+		repo.l.Errorf(ctx, "post.mongo.CreateReaction.ensureReactionIndex: %v", err)
+		return models.Reaction{}, err
+	}
 
 	m, err := repo.buildReactionModels(ctx, sc, opts)
 	if err != nil {
@@ -29,6 +35,9 @@ func (repo impleRepository) CreateReaction(ctx context.Context, sc models.Scope,
 
 	_, err = col.InsertOne(ctx, m)
 	if err != nil {
+		if driverMongo.IsDuplicateKeyError(err) {
+			return models.Reaction{}, post.ErrReactionAlreadyExists
+		}
 		repo.l.Errorf(ctx, "Reactions.mogno.CreateReaction.InsertOne: %v", err)
 		return models.Reaction{}, err
 	}
@@ -39,7 +48,7 @@ func (repo impleRepository) CreateReaction(ctx context.Context, sc models.Scope,
 func (repo impleRepository) DetailReaction(ctx context.Context, sc models.Scope, id string) (models.Reaction, error) {
 	col := repo.getReactionCollection()
 
-	filter, err := repo.buildDetailQuery(ctx, sc, id)
+	filter, err := repo.buildDetailReactionQuery(ctx, sc, id)
 	if err != nil {
 		repo.l.Errorf(ctx, "post.mongo.DetailReaction.buildDetailQuery: %v", err)
 		return models.Reaction{}, err
@@ -71,7 +80,7 @@ func (repo impleRepository) ListReaction(ctx context.Context, sc models.Scope, o
 	}
 
 	var ms []models.Reaction
-	err = cur.All(ctx, ms)
+	err = cur.All(ctx, &ms)
 	if err != nil {
 		repo.l.Errorf(ctx, "post.mongo.ListReaction.All: %v", err)
 		return []models.Reaction{}, err
@@ -121,7 +130,7 @@ func (repo impleRepository) GetReaction(ctx context.Context, sc models.Scope, op
 func (repo impleRepository) DeleteReaction(ctx context.Context, sc models.Scope, id string) error {
 	col := repo.getReactionCollection()
 
-	filter, err := repo.buildDetailQuery(ctx, sc, id)
+	filter, err := repo.buildDetailReactionQuery(ctx, sc, id)
 	if err != nil {
 		repo.l.Errorf(ctx, "post.mongo.DeleteReaction.buildDetailQuery: %v", err)
 		return err
