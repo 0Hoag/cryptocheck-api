@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -33,6 +34,7 @@ type Pair struct {
 	ChainId       string    `json:"chainId"`
 	DexID         string    `json:"dexId"`
 	URL           string    `json:"url"`
+	PriceUSD      string    `json:"priceUsd"`
 	PairCreatedAt int64     `json:"pairCreatedAt"`
 	BaseToken     Token     `json:"baseToken"`
 	QuoteToken    Token     `json:"quoteToken"`
@@ -63,6 +65,7 @@ type Asset struct {
 	Symbol                string
 	LiquidityUSD          float64
 	VolumeH24             float64
+	PriceUSD              float64
 	ContractScanSupported bool
 	DexID                 string
 	PairURL               string
@@ -180,10 +183,11 @@ func (c *Client) SearchAssets(query string, limit int) ([]Asset, error) {
 			network = candidate.pair.ChainId
 		}
 
+		priceUSD, _ := strconv.ParseFloat(candidate.pair.PriceUSD, 64)
 		assets = append(assets, Asset{
 			Address: candidate.token.Address, Network: network, Name: candidate.token.Name,
 			Symbol: candidate.token.Symbol, LiquidityUSD: candidate.pair.Liquidity.Usd,
-			VolumeH24: candidate.pair.Volume.H24, ContractScanSupported: contractScanSupported,
+			VolumeH24: candidate.pair.Volume.H24, PriceUSD: priceUSD, ContractScanSupported: contractScanSupported,
 			DexID: candidate.pair.DexID, PairURL: candidate.pair.URL, PairCreatedAt: candidate.pair.PairCreatedAt,
 		})
 	}

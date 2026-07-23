@@ -98,7 +98,7 @@ func (uc ScannerUC) FindCandidates(ctx context.Context, input scanDomain.FindCan
 	for _, asset := range assets {
 		candidates = append(candidates, scanDomain.TokenCandidate{
 			Address: asset.Address, Network: asset.Network, Name: asset.Name, Symbol: asset.Symbol,
-			LiquidityUSD: asset.LiquidityUSD, VolumeH24: asset.VolumeH24, ContractScanSupported: asset.ContractScanSupported,
+			LiquidityUSD: asset.LiquidityUSD, VolumeH24: asset.VolumeH24, PriceUSD: asset.PriceUSD, ContractScanSupported: asset.ContractScanSupported,
 			DexID: asset.DexID, PairURL: asset.PairURL, PairCreatedAt: asset.PairCreatedAt,
 		})
 	}
@@ -115,6 +115,7 @@ func marketProfile(asset dexscreener.Asset) scanDomain.ScanTokenOutput {
 		ScoreAvailable:   false,
 		LiquidityUSD:     asset.LiquidityUSD,
 		VolumeH24:        asset.VolumeH24,
+		PriceUSD:         asset.PriceUSD,
 		MarketProvider:   "DexScreener",
 		DexID:            asset.DexID,
 		PairURL:          asset.PairURL,
@@ -152,7 +153,7 @@ func (uc ScannerUC) scanSolanaMint(ctx context.Context, asset dexscreener.Asset,
 	}
 	return scanDomain.ScanTokenOutput{
 		Network: asset.Network, Name: asset.Name, Address: asset.Address, AnalysisType: "solana_mint", SourceAvailable: false,
-		ScoreAvailable: true, TrustScore: score, LiquidityUSD: asset.LiquidityUSD, VolumeH24: asset.VolumeH24,
+		ScoreAvailable: true, TrustScore: score, LiquidityUSD: asset.LiquidityUSD, VolumeH24: asset.VolumeH24, PriceUSD: asset.PriceUSD,
 		MarketProvider: "DexScreener", DexID: asset.DexID, PairURL: asset.PairURL, PairCreatedAt: asset.PairCreatedAt,
 		MarketConfidence: marketConfidence(asset.LiquidityUSD, asset.VolumeH24), Issues: issues, SafeFeatures: safeFeatures,
 	}, nil

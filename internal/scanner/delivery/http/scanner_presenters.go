@@ -59,6 +59,7 @@ type scannerTokenOutput struct {
 	TrustScore       int      `json:"trust_score"`
 	LiquidityUSD     float64  `json:"liquidity_usd,omitempty"`
 	VolumeH24        float64  `json:"volume_h24,omitempty"`
+	PriceUSD         float64  `json:"price_usd,omitempty"`
 	MarketProvider   string   `json:"market_provider,omitempty"`
 	DexID            string   `json:"dex_id,omitempty"`
 	PairURL          string   `json:"pair_url,omitempty"`
@@ -79,6 +80,7 @@ func (h handler) ToScanTokenOutput(token scanner.ScanTokenOutput) scannerTokenOu
 		TrustScore:       token.TrustScore,
 		LiquidityUSD:     token.LiquidityUSD,
 		VolumeH24:        token.VolumeH24,
+		PriceUSD:         token.PriceUSD,
 		MarketProvider:   token.MarketProvider,
 		DexID:            token.DexID,
 		PairURL:          token.PairURL,
