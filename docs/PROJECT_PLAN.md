@@ -111,5 +111,5 @@ go test ./internal/group/... ./internal/notification/...
 
 - [ ] Set release-mode logging, trusted proxy configuration and restrictive CORS origins.
 - [ ] Add request validation/error contract tests and structured observability.
-- [ ] Add CI for `go test ./...`, formatting and vulnerability checks.
+- [x] Add GitHub Actions CI for formatting, `go test ./...` and `govulncheck` on pushes/PRs to main. (local formatting and full test suite passed; remote run is triggered by this commit)
 - [ ] Document environment variables and deployment runbook without secrets.
