@@ -2,15 +2,44 @@ package processor
 
 import (
 	"context"
+	"html"
+	"regexp"
 	"strings"
 
-	"github.com/bregydoc/gtranslate"
 	"github.com/0Hoag/cryptocheck-api/internal/crawler"
 	"github.com/0Hoag/cryptocheck-api/pkg/log"
+	"github.com/bregydoc/gtranslate"
 )
 
 type SimpleProcessor struct {
 	l log.Logger
+}
+
+var htmlTagPattern = regexp.MustCompile(`<[^>]*>`)
+var spaceBeforePunctuationPattern = regexp.MustCompile(`\s+([.,!?;:])`)
+
+// cleanArticleText turns RSS HTML and crawler output into safe plain text for
+// translation and Markdown rendering. Cover images are stored separately.
+func cleanArticleText(value string) string {
+	value = htmlTagPattern.ReplaceAllString(value, " ")
+	value = html.UnescapeString(value)
+	value = strings.Join(strings.Fields(value), " ")
+	return spaceBeforePunctuationPattern.ReplaceAllString(value, "$1")
+}
+
+func articleExcerpt(content, fallback string) string {
+	text := cleanArticleText(content)
+	if len(text) < 80 {
+		text = cleanArticleText(fallback)
+	}
+	if len(text) <= 900 {
+		return text
+	}
+	cut := text[:900]
+	if lastSentence := strings.LastIndexAny(cut, ".!?"); lastSentence > 400 {
+		return cut[:lastSentence+1]
+	}
+	return strings.TrimSpace(cut) + "…"
 }
 
 func NewSimpleProcessor(l log.Logger) *SimpleProcessor {
@@ -32,21 +61,9 @@ func (p *SimpleProcessor) Process(ctx context.Context, article crawler.Article) 
 		return ProcessedContent{}, err
 	}
 
-	// Extract first 2-3 sentences from content for summary
-	summary := article.Summary
-	if summary == "" && article.Content != "" {
-		// Take first 300 characters or first 2 sentences
-		content := article.Content
-		if len(content) > 300 {
-			content = content[:300]
-		}
-		// Find last period to avoid cutting mid-sentence
-		lastPeriod := strings.LastIndex(content, ".")
-		if lastPeriod > 100 { // Ensure we don't cut too short if no period is found early
-			content = content[:lastPeriod+1]
-		}
-		summary = content
-	}
+	// Prefer an excerpt from the crawled article body. RSS descriptions often
+	// contain tracking HTML and a duplicated cover image.
+	summary := articleExcerpt(article.Content, article.Summary)
 
 	// If still no summary, use title
 	if summary == "" {
@@ -67,11 +84,13 @@ func (p *SimpleProcessor) Process(ctx context.Context, article crawler.Article) 
 	}
 
 	return ProcessedContent{
-		OriginalTitle:     article.Title,
-		TranslatedTitle:   titleVi,
-		OriginalSummary:   summary,
-		TranslatedSummary: summaryVi,
-		SourceURL:         article.SourceURL,
-		ImageURL:          article.ImageURL,
+		OriginalTitle:         article.Title,
+		TranslatedTitle:       titleVi,
+		OriginalSummary:       summary,
+		TranslatedSummary:     summaryVi,
+		TranslatedFullContent: summaryVi,
+		Content:               summary,
+		SourceURL:             article.SourceURL,
+		ImageURL:              article.ImageURL,
 	}, nil
 }

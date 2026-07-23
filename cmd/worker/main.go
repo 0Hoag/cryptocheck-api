@@ -174,11 +174,8 @@ func main() {
 				}
 
 				// C. Create Post
-				content := fmt.Sprintf("![Image](%s)\n\n%s\n\nNguồn: %s",
-					processed.ImageURL,
-					processed.TranslatedSummary,
-					processed.SourceURL,
-				)
+				content := fmt.Sprintf("![Image](%s)\n\n## Tóm tắt từ nguồn\n\n%s\n\n> CryptoCheck chỉ đăng bản tóm tắt. Đọc bài gốc tại: %s",
+					processed.ImageURL, processed.TranslatedSummary, processed.SourceURL)
 
 				_, err = pUC.Create(ctx, scope, post.CreateInput{
 					Title:         processed.TranslatedTitle,       // Vietnamese Title
