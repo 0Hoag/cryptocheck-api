@@ -1,9 +1,12 @@
 package http
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/0Hoag/cryptocheck-api/internal/follow"
+	"github.com/0Hoag/cryptocheck-api/internal/models"
+	"github.com/0Hoag/cryptocheck-api/pkg/paginator"
 	"github.com/0Hoag/cryptocheck-api/pkg/response"
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // @Summary Create Follow
@@ -121,6 +124,42 @@ func (h handler) Get(c *gin.Context) {
 	}
 
 	response.OK(c, h.newGetResp(e))
+}
+
+// Counts returns public aggregate counts for a member profile. It intentionally
+// does not expose the individual follow relationships.
+func (h handler) Counts(c *gin.Context) {
+	ctx := c.Request.Context()
+	userID := c.Param("user_id")
+	if _, err := primitive.ObjectIDFromHex(userID); err != nil {
+		response.Error(c, errWrongQuery)
+		return
+	}
+
+	page := paginator.PaginatorQuery{Page: 1, Limit: 1}
+	followers, err := h.uc.Get(ctx, models.Scope{}, follow.GetInput{
+		Filter:   follow.Filter{FolloweeID: userID},
+		PagQuery: page,
+	})
+	if err != nil {
+		h.l.Errorf(ctx, "follow.delivery.http.Counts.followers: %v", err)
+		response.Error(c, h.mapError(err))
+		return
+	}
+	following, err := h.uc.Get(ctx, models.Scope{}, follow.GetInput{
+		Filter:   follow.Filter{AuthorID: userID},
+		PagQuery: page,
+	})
+	if err != nil {
+		h.l.Errorf(ctx, "follow.delivery.http.Counts.following: %v", err)
+		response.Error(c, h.mapError(err))
+		return
+	}
+
+	response.OK(c, gin.H{
+		"followers": followers.Paginator.Total,
+		"following": following.Paginator.Total,
+	})
 }
 
 // @Summary Delete Follow

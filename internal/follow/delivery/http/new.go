@@ -1,15 +1,16 @@
 package http
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/0Hoag/cryptocheck-api/internal/follow"
 	"github.com/0Hoag/cryptocheck-api/pkg/log"
+	"github.com/gin-gonic/gin"
 )
 
 type Handler interface {
 	Create(c *gin.Context)
 	Detail(c *gin.Context)
 	Get(c *gin.Context)
+	Counts(c *gin.Context)
 	Delete(c *gin.Context)
 }
 
