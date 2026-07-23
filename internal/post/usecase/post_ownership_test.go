@@ -13,10 +13,12 @@ import (
 )
 
 type postRepositoryStub struct {
-	post        models.Post
-	updateCalls int
-	deleteCalls int
-	updatedWith repository.UpdateOptions
+	post                models.Post
+	updateCalls         int
+	deleteCalls         int
+	updatedWith         repository.UpdateOptions
+	reaction            models.Reaction
+	reactionDeleteCalls int
 }
 
 func (s *postRepositoryStub) Create(context.Context, models.Scope, repository.CreateOptions) (models.Post, error) {
@@ -53,7 +55,7 @@ func (s *postRepositoryStub) CreateReaction(context.Context, models.Scope, repos
 	return models.Reaction{}, nil
 }
 func (s *postRepositoryStub) DetailReaction(context.Context, models.Scope, string) (models.Reaction, error) {
-	return models.Reaction{}, nil
+	return s.reaction, nil
 }
 func (s *postRepositoryStub) ListReaction(context.Context, models.Scope, repository.ListReactionOptions) ([]models.Reaction, error) {
 	return nil, nil
@@ -61,7 +63,10 @@ func (s *postRepositoryStub) ListReaction(context.Context, models.Scope, reposit
 func (s *postRepositoryStub) GetReaction(context.Context, models.Scope, repository.GetReactionOptions) ([]models.Reaction, paginator.Paginator, error) {
 	return nil, paginator.Paginator{}, nil
 }
-func (s *postRepositoryStub) DeleteReaction(context.Context, models.Scope, string) error { return nil }
+func (s *postRepositoryStub) DeleteReaction(context.Context, models.Scope, string) error {
+	s.reactionDeleteCalls++
+	return nil
+}
 func (s *postRepositoryStub) CreateComment(context.Context, models.Scope, repository.CreateCommentOptions) (models.Comment, error) {
 	return models.Comment{}, nil
 }

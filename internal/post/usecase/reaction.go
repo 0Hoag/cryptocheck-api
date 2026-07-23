@@ -93,7 +93,16 @@ func (uc impleUsecase) GetReaction(ctx context.Context, sc models.Scope, input p
 }
 
 func (uc impleUsecase) DeleteReaction(ctx context.Context, sc models.Scope, id string) error {
-	err := uc.repo.DeleteReaction(ctx, sc, id)
+	reaction, err := uc.repo.DetailReaction(ctx, models.Scope{}, id)
+	if err != nil {
+		uc.l.Errorf(ctx, "reaction.usecase.DeleteReaction.DetailReaction: %v", err)
+		return err
+	}
+	if reaction.AuthorID.Hex() != sc.UserID {
+		return postDomainPermissionDenied()
+	}
+
+	err = uc.repo.DeleteReaction(ctx, sc, id)
 	if err != nil {
 		uc.l.Errorf(ctx, "reaction.usecase.DeleteReaction.DeleteReaction: %v", err)
 		return err
