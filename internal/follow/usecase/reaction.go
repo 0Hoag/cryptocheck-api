@@ -42,12 +42,15 @@ func (uc impleUsecase) Create(ctx context.Context, sc models.Scope, input follow
 }
 
 func (uc impleUsecase) Detail(ctx context.Context, sc models.Scope, id string) (models.Follow, error) {
-	follow, err := uc.repo.Detail(ctx, sc, id)
+	relation, err := uc.repo.Detail(ctx, models.Scope{}, id)
 	if err != nil {
 		uc.l.Errorf(ctx, "follow.usecase.Detail.Detail: %v", err)
 		return models.Follow{}, err
 	}
-	return follow, nil
+	if relation.AuthorID.Hex() != sc.UserID {
+		return models.Follow{}, follow.ErrPermissionDenied
+	}
+	return relation, nil
 }
 
 func (uc impleUsecase) List(ctx context.Context, sc models.Scope, input follow.ListInput) ([]models.Follow, error) {
@@ -67,6 +70,15 @@ func (uc impleUsecase) List(ctx context.Context, sc models.Scope, input follow.L
 }
 
 func (uc impleUsecase) Get(ctx context.Context, sc models.Scope, input follow.GetInput) (follow.GetOutput, error) {
+	// Follow relationships are private. The profile endpoint exposes aggregate
+	// counts separately, while a member can query only their own relationships.
+	// An empty scope is reserved for the internal aggregate-count handler, which
+	// discards relationship rows before responding. Authenticated callers must
+	// always constrain the query to their own author ID.
+	if sc.UserID != "" && input.AuthorID != sc.UserID {
+		return follow.GetOutput{}, follow.ErrPermissionDenied
+	}
+
 	follows, paginator, err := uc.repo.Get(ctx, sc, repository.GetOptions{
 		Filter: repository.Filter{
 			ID:         input.ID,

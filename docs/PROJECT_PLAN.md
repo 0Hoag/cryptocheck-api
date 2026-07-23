@@ -89,7 +89,7 @@ go test ./internal/post/... ./internal/comment/...
 - [ ] Add group post feed and moderation controls.
 - [x] Add authenticated follow/unfollow and author-filtered profile feed endpoints (integration tested).
 - [x] Add a public aggregate follower/following counts endpoint without exposing individual follow relationships. (HTTP handler test passed)
-- [ ] Define privacy-aware access rules for individual follower/following lists.
+- [x] Restrict individual follow relationship/detail access to the relationship owner; profiles expose only public aggregate counts. (table-driven usecase tests passed)
 - [ ] Add notifications for reactions, comments, follows and group events.
 - [ ] Add reporting/moderation audit trail for posts and comments.
 
