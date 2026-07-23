@@ -21,6 +21,7 @@ type TokenCandidate struct {
 	LiquidityUSD          float64 `json:"liquidity_usd"`
 	VolumeH24             float64 `json:"volume_h24"`
 	PriceUSD              float64 `json:"price_usd"`
+	ImageURL              string  `json:"image_url"`
 	ContractScanSupported bool    `json:"contract_scan_supported"`
 	DexID                 string  `json:"dex_id"`
 	PairURL               string  `json:"pair_url"`
@@ -38,6 +39,7 @@ type ScanTokenOutput struct {
 	LiquidityUSD     float64         `json:"liquidity_usd,omitempty"`
 	VolumeH24        float64         `json:"volume_h24,omitempty"`
 	PriceUSD         float64         `json:"price_usd,omitempty"`
+	ImageURL         string          `json:"image_url,omitempty"`
 	MarketProvider   string          `json:"market_provider,omitempty"`
 	DexID            string          `json:"dex_id,omitempty"`
 	PairURL          string          `json:"pair_url,omitempty"`

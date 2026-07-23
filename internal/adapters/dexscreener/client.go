@@ -40,6 +40,12 @@ type Pair struct {
 	QuoteToken    Token     `json:"quoteToken"`
 	Liquidity     Liquidity `json:"liquidity"`
 	Volume        Volume    `json:"volume"`
+	Info          PairInfo  `json:"info"`
+}
+
+// PairInfo contains optional presentation metadata supplied by DexScreener.
+type PairInfo struct {
+	ImageURL string `json:"imageUrl"`
 }
 
 type Token struct {
@@ -66,6 +72,7 @@ type Asset struct {
 	LiquidityUSD          float64
 	VolumeH24             float64
 	PriceUSD              float64
+	ImageURL              string
 	ContractScanSupported bool
 	DexID                 string
 	PairURL               string
@@ -188,7 +195,7 @@ func (c *Client) SearchAssets(query string, limit int) ([]Asset, error) {
 			Address: candidate.token.Address, Network: network, Name: candidate.token.Name,
 			Symbol: candidate.token.Symbol, LiquidityUSD: candidate.pair.Liquidity.Usd,
 			VolumeH24: candidate.pair.Volume.H24, PriceUSD: priceUSD, ContractScanSupported: contractScanSupported,
-			DexID: candidate.pair.DexID, PairURL: candidate.pair.URL, PairCreatedAt: candidate.pair.PairCreatedAt,
+			ImageURL: candidate.pair.Info.ImageURL, DexID: candidate.pair.DexID, PairURL: candidate.pair.URL, PairCreatedAt: candidate.pair.PairCreatedAt,
 		})
 	}
 	if len(assets) == 0 {
