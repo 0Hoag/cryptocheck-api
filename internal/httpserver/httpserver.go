@@ -8,17 +8,16 @@ import (
 )
 
 func (srv HTTPServer) Run() error {
-	err := srv.mapHandlers()
-	if err != nil {
-		return err
-	}
-
 	ctx := context.Background()
 
-	// Seed database on startup (idempotent — skips existing records)
+	// Seed before initializing route dependencies. A clean local database must be
+	// usable on the very first startup, before any repository or queue setup.
 	if err := seeder.Run(ctx, srv.db); err != nil {
-		srv.l.Errorf(ctx, "seeder.Run: %v", err)
-		// Non-fatal: log and continue
+		return fmt.Errorf("seed database: %w", err)
+	}
+
+	if err := srv.mapHandlers(); err != nil {
+		return err
 	}
 
 	srv.l.Infof(ctx, "Started server on :%d", srv.port)

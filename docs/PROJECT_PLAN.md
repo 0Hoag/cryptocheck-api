@@ -15,6 +15,7 @@
 
 - [x] MongoDB + RabbitMQ local Docker dependencies can be started from `make run-api`.
 - [x] RabbitMQ is optional for local API startup and no longer crashes the server.
+- [x] Mongo insert wrapper returns driver failures instead of dereferencing a nil insert result; seed failures are now explicit rather than crashing the API. (full API suite and fresh-database startup check)
 - [x] Scanner explorer keys were moved from the legacy local environment to the new local `.env` (not committed).
 - [ ] Replace the Gemini API key reported by Google as leaked, then verify AI analysis returns JSON instead of regex fallback.
 

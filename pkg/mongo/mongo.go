@@ -138,6 +138,12 @@ func (mc *mongoCollection) UpdateOne(ctx context.Context, filter interface{}, up
 
 func (mc *mongoCollection) InsertOne(ctx context.Context, document interface{}) (interface{}, error) {
 	id, err := mc.coll.InsertOne(ctx, document)
+	if err != nil {
+		return nil, err
+	}
+	if id == nil {
+		return nil, errors.New("insert one returned a nil result")
+	}
 	return id.InsertedID, err
 }
 
