@@ -34,7 +34,7 @@ curl -fsS http://localhost:8080/swagger/index.html >/dev/null
 - [x] ENA integration check: resolves Ethereum contract and returns a score.
 - [x] Add mocked DexScreener adapter tests for exact base/quote matching, deduplication, supported-chain mapping and provider errors.
 - [x] Add mocked Etherscan-compatible explorer adapter tests for source parsing, request parameters and provider error responses.
-- [ ] Add a persisted scan history with owner, input, network, score, engine version and timestamps.
+- [x] Add a persisted scan history with owner, input, network, score, engine version and timestamps. (authenticated BTC scan/history smoke test passed; anonymous history request returns 401)
 - [ ] Define and enforce Free/Premium quotas and analysis depth server-side.
 
 ### 1.1 Multi-market and early-launch coverage

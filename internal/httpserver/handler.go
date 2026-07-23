@@ -85,7 +85,7 @@ func (srv HTTPServer) mapHandlers() error {
 	followH := followHTTP.New(srv.l, followUC)
 	commentH := commentHTTP.New(srv.l, commentUC)
 	authH := authHTTP.New(srv.l, authUC)
-	scanH := scanHTTP.New(srv.l, scanUsecase)
+	scanH := scanHTTP.New(srv.l, scanUsecase, srv.db)
 
 	// Middlewares
 	mw := middleware.New(srv.l, userUC, jwtManager, srv.encrypter, srv.internalKey)
