@@ -6,6 +6,7 @@ import "github.com/caarlos0/env/v9"
 type Config struct {
 	Logger       LoggerConfig
 	HTTPServer   HTTPServerConfig
+	CORS         CORSConfig
 	Mongo        MongoConfig
 	RabbitConfig RabbitConfig
 	JWT          JWTConfig
@@ -48,6 +49,11 @@ type RabbitConfig struct {
 type HTTPServerConfig struct {
 	Port int    `env:"APP_PORT" envDefault:"80"`
 	Mode string `env:"API_MODE" envDefault:"debug"`
+}
+
+type CORSConfig struct {
+	AllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS" envSeparator:","`
+	TrustedProxies []string `env:"TRUSTED_PROXIES" envSeparator:","`
 }
 
 type LoggerConfig struct {

@@ -94,12 +94,14 @@ func main() {
 	// ---------------------------------------------------------
 
 	srv := httpserver.New(l, httpserver.Config{
-		Port:         port,
-		DB:           db,
-		AMQPConn:     amqpConn,
-		JWTSecretKey: cfg.JWT.SecretKey,
-		Mode:         cfg.HTTPServer.Mode,
-		Encrypter:    crp,
+		Port:           port,
+		DB:             db,
+		AMQPConn:       amqpConn,
+		JWTSecretKey:   cfg.JWT.SecretKey,
+		Mode:           cfg.HTTPServer.Mode,
+		AllowedOrigins: cfg.CORS.AllowedOrigins,
+		TrustedProxies: cfg.CORS.TrustedProxies,
+		Encrypter:      crp,
 		SecretConfig: httpserver.SecretConfig{
 			SecretKey: cfg.Encrypter.Key,
 		},

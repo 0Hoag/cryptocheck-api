@@ -111,7 +111,7 @@ go test ./internal/group/... ./internal/notification/...
 
 ## 5. Production hardening
 
-- [ ] Set release-mode logging, trusted proxy configuration and restrictive CORS origins.
+- [x] Set release-mode logging, configurable trusted proxies and restrictive CORS origin allow-list (no wildcard credentials). (full API test suite passed)
 - [ ] Add request validation/error contract tests and structured observability.
 - [x] Add GitHub Actions CI for formatting, `go test ./...` and `govulncheck` on pushes/PRs to main. (local formatting and full test suite passed; remote run is triggered by this commit)
 - [x] Document split-repository environment/deployment and rollback runbook without secrets. (deployment runbook reviewed; commands validate compose before recreate)
