@@ -43,7 +43,7 @@ curl -fsS http://localhost:8080/swagger/index.html >/dev/null
 - [x] Add a first chain-specific Solana SPL mint analyzer (mint/freeze authority only); label it as limited on-chain analysis, not a full program audit. (BONK candidate smoke test passed)
 - [ ] Add chain-specific analyzers for other high-volume non-EVM chains before claiming source-code coverage.
 - [x] Add market metadata (DEX pair URL, liquidity, 24h volume, pair creation time, source/provider) and a market-data confidence level to every market-only result. (ENA smoke test passed)
-- [ ] Add a prelaunch/watchlist record for projects without a deployed contract: project URL, official socials, claimed chain, launch date, verification evidence and risk flags.
+- [x] Add a prelaunch/watchlist record for projects without a deployed contract: public list/detail plus authenticated create and owner-only update/delete; record project URL, official socials, claimed chain, launch date, verification evidence and risk flags. (prelaunch and HTTP server packages passed)
 - [ ] Integrate a launch-calendar/presale provider only after its API terms, rate limits and data attribution are reviewed; cache results and record the provider timestamp.
 - [ ] Add background discovery/monitoring for new listings and contract deployments, with deduplication and alert thresholds.
 
