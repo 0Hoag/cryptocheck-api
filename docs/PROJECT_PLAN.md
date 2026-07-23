@@ -32,7 +32,7 @@ curl -fsS http://localhost:8080/swagger/index.html >/dev/null
 - [x] Prevent native coins such as BNB/ETH/BTC from being treated as contracts in the client.
 - [x] ENA integration check: resolves Ethereum contract and returns a score.
 - [x] Add mocked DexScreener adapter tests for exact base/quote matching, deduplication, supported-chain mapping and provider errors.
-- [ ] Add scanner integration tests with mocked explorer responses.
+- [x] Add mocked Etherscan-compatible explorer adapter tests for source parsing, request parameters and provider error responses.
 - [ ] Add a persisted scan history with owner, input, network, score, engine version and timestamps.
 - [ ] Define and enforce Free/Premium quotas and analysis depth server-side.
 
