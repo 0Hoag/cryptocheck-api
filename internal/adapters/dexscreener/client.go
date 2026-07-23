@@ -14,11 +14,13 @@ import (
 
 type Client struct {
 	httpClient *http.Client
+	baseURL    string
 }
 
 func NewClient() *Client {
 	return &Client{
 		httpClient: &http.Client{Timeout: 10 * time.Second},
+		baseURL:    "https://api.dexscreener.com",
 	}
 }
 
@@ -93,7 +95,7 @@ func (c *Client) SearchTopAsset(query string) (Asset, error) {
 // SearchAssets returns a short, de-duplicated list of the strongest matches.
 // Callers can let a user choose the correct chain when a symbol is ambiguous.
 func (c *Client) SearchAssets(query string, limit int) ([]Asset, error) {
-	url := fmt.Sprintf("https://api.dexscreener.com/latest/dex/search?q=%s", url.QueryEscape(query))
+	url := fmt.Sprintf("%s/latest/dex/search?q=%s", c.baseURL, url.QueryEscape(query))
 
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
