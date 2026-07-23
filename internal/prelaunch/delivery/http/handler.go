@@ -22,8 +22,8 @@ type handler struct{ db pkgMongo.Database }
 
 func MapRoutes(r *gin.RouterGroup, db pkgMongo.Database, mw middleware.Middleware) {
 	h := handler{db: db}
-	r.GET("", h.list)
-	r.GET("/:id", h.detail)
+	r.GET("", mw.OptionalAuth(), h.list)
+	r.GET("/:id", mw.OptionalAuth(), h.detail)
 	auth := r.Group("")
 	auth.Use(mw.Auth())
 	auth.POST("", h.create)
@@ -71,6 +71,7 @@ func (h handler) create(c *gin.Context) {
 		response.Error(c, err)
 		return
 	}
+	p.IsOwner = true
 	response.OK(c, p)
 }
 
@@ -86,6 +87,9 @@ func (h handler) list(c *gin.Context) {
 		response.Error(c, err)
 		return
 	}
+	for index := range projects {
+		projects[index] = withOwnership(c, projects[index])
+	}
 	response.OK(c, projects)
 }
 
@@ -94,7 +98,7 @@ func (h handler) detail(c *gin.Context) {
 	if !ok {
 		return
 	}
-	response.OK(c, p)
+	response.OK(c, withOwnership(c, p))
 }
 
 func (h handler) update(c *gin.Context) {
@@ -114,6 +118,7 @@ func (h handler) update(c *gin.Context) {
 		response.Error(c, err)
 		return
 	}
+	p.IsOwner = true
 	response.OK(c, p)
 }
 
@@ -166,6 +171,12 @@ func scope(c *gin.Context) (models.Scope, bool) {
 		return models.Scope{}, false
 	}
 	return jwt.NewScope(payload), true
+}
+
+func withOwnership(c *gin.Context, p models.PrelaunchProject) models.PrelaunchProject {
+	sc, ok := scope(c)
+	p.IsOwner = ok && p.OwnerID.Hex() == sc.UserID
+	return p
 }
 func riskFlags(r projectRequest) []string {
 	flags := []string{"No deployed contract: security score unavailable"}

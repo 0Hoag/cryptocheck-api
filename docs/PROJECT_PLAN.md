@@ -44,6 +44,7 @@ curl -fsS http://localhost:8080/swagger/index.html >/dev/null
 - [ ] Add chain-specific analyzers for other high-volume non-EVM chains before claiming source-code coverage.
 - [x] Add market metadata (DEX pair URL, liquidity, 24h volume, pair creation time, source/provider) and a market-data confidence level to every market-only result. (ENA smoke test passed)
 - [x] Add a prelaunch/watchlist record for projects without a deployed contract: public list/detail plus authenticated create and owner-only update/delete; record project URL, official socials, claimed chain, launch date, verification evidence and risk flags. (prelaunch and HTTP server packages passed)
+- [x] Return a transient `is_owner` flag on optionally authenticated prelaunch responses so the client can expose owner controls without exposing owner IDs. (full API test suite passed)
 - [ ] Integrate a launch-calendar/presale provider only after its API terms, rate limits and data attribution are reviewed; cache results and record the provider timestamp.
 - [ ] Add background discovery/monitoring for new listings and contract deployments, with deduplication and alert thresholds.
 
