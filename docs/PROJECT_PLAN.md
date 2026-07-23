@@ -67,7 +67,8 @@ curl -fsS 'http://localhost:8080/api/v1/news-feed/scanner?token=ENA&lang=vi'
 - [x] Post update and delete enforce ownership and return 403 for another user's post.
 - [x] Comment update/delete enforce ownership, return the persisted update, and return 403 for another user (integration tested).
 - [x] Add table-driven usecase tests for post update/delete ownership (owner succeeds; another member receives `ErrPermissionDenied`).
-- [ ] Add ownership tests for reaction and comment mutations.
+- [x] Add table-driven usecase tests for comment update/delete ownership (owner succeeds; another member receives `ErrPermissionDenied`).
+- [ ] Add ownership tests for reaction mutations.
 - [x] Enforce one reaction per user/post/type with a Mongo unique index and duplicate-safe API response (integration tested).
 - [x] Return aggregate reaction/comment counts with feed posts to remove client N+1 calls (integration tested).
 - [x] Return sanitized author summaries with feed posts (integration tested; no phone exposure).
