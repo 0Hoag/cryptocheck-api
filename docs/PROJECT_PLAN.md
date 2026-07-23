@@ -89,6 +89,7 @@ go test ./internal/post/... ./internal/comment/...
 
 ## 3. Community and groups
 
+- [x] Make automated crypto-news publishing resilient to a recreated local MongoDB: worker validates its configured author and falls back to the seeded admin; Docker worker authenticates to MongoDB correctly. (full suite passed; live crawl fetched 55 articles and created a public post)
 - [ ] Add `groups` domain: group, membership, role (owner/admin/mod/member), join policy and visibility.
 - [ ] Add group post feed and moderation controls.
 - [x] Add authenticated follow/unfollow and author-filtered profile feed endpoints (integration tested).

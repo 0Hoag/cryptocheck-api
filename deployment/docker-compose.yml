@@ -46,7 +46,7 @@ services:
       - path: ../.env
         required: false
     environment:
-      - MONGODB_URI=mongodb://root:password@mongodb:27017
+      - MONGODB_URI=mongodb://root:password@mongodb:27017/?authSource=admin
       - MONGODB_DATABASE=social_feed
       - RABBITMQ_URL=amqp://user:password@rabbitmq:5672/
       - APP_PORT=8080
@@ -74,7 +74,7 @@ services:
       - path: ../.env
         required: false
     environment:
-      - MONGODB_URI=mongodb://root:password@mongodb:27017
+      - MONGODB_URI=mongodb://root:password@mongodb:27017/?authSource=admin
       - MONGODB_DATABASE=social_feed
       - RABBITMQ_URL=amqp://user:password@rabbitmq:5672/
       - LOGGER_LEVEL=info

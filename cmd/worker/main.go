@@ -20,6 +20,7 @@ import (
 	postUC "github.com/0Hoag/cryptocheck-api/internal/post/usecase"
 	"github.com/0Hoag/cryptocheck-api/internal/processor"
 	"github.com/0Hoag/cryptocheck-api/internal/telegram"
+	"github.com/0Hoag/cryptocheck-api/internal/users"
 	userMongo "github.com/0Hoag/cryptocheck-api/internal/users/repository/mongo"
 	userUC "github.com/0Hoag/cryptocheck-api/internal/users/usecase"
 	pkgCrt "github.com/0Hoag/cryptocheck-api/pkg/encrypter"
@@ -122,10 +123,12 @@ func main() {
 			l.Infof(ctx, "Worker: Limited to 10 articles to avoid spam")
 		}
 
-		// Define scope for the job
-		scope := models.Scope{
-			UserID: cfg.Bot.UserID,
-			Roles:  []string{"admin"}, // or bot
+		// Resolve the author on every run. A recreated local Mongo database gets
+		// new ObjectIDs, so a stale BOT_USER_ID must not leave the feed empty.
+		scope, err := resolvePostingScope(ctx, uUC, cfg.Bot.UserID)
+		if err != nil {
+			l.Errorf(ctx, "Worker: no valid author available for crawled posts: %v", err)
+			return
 		}
 
 		for _, article := range articles {
@@ -241,4 +244,24 @@ func main() {
 
 	c.Stop()
 	l.Info(context.Background(), "Worker stopped")
+}
+
+const seededAdminPhone = "0328923189"
+
+func resolvePostingScope(ctx context.Context, uUC users.UseCase, configuredID string) (models.Scope, error) {
+	if strings.TrimSpace(configuredID) != "" {
+		user, err := uUC.GetOne(ctx, users.Filter{ID: configuredID})
+		if err == nil {
+			return models.Scope{UserID: user.ID.Hex(), Roles: []string{"admin"}}, nil
+		}
+	}
+
+	// Local bootstrap creates this admin user. Falling back keeps automated news
+	// publishing available after the database volume is recreated; production can
+	// still configure a dedicated BOT_USER_ID.
+	admin, err := uUC.GetOne(ctx, users.Filter{Phone: seededAdminPhone})
+	if err != nil {
+		return models.Scope{}, fmt.Errorf("resolve configured bot or seeded admin: %w", err)
+	}
+	return models.Scope{UserID: admin.ID.Hex(), Roles: []string{"admin"}}, nil
 }
