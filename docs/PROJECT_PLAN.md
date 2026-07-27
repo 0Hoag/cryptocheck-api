@@ -92,7 +92,7 @@ go test ./internal/post/... ./internal/comment/...
 
 - [x] Make automated crypto-news publishing resilient to a recreated local MongoDB: worker validates its configured author and falls back to the seeded admin; Docker worker authenticates to MongoDB correctly. (full suite passed; live crawl fetched 55 articles and created a public post)
 - [x] Clean crawler RSS HTML and prefer article-body excerpts for news posts; cover images remain separate and posts clearly attribute/link to the original article. (processor tests + worker smoke test)
-- [ ] Add `groups` domain: group, membership, role (owner/admin/mod/member), join policy and visibility.
+- [x] Add `groups` domain: group, membership, role (owner/admin/mod/member), join policy and visibility. Public/private visibility, open/approval/invite joins, owner leave protection, and owner/admin member-role management are covered by handler validation tests and the full Go suite.
 - [ ] Add group post feed and moderation controls.
 - [x] Add authenticated follow/unfollow and author-filtered profile feed endpoints (integration tested).
 - [x] Add a public aggregate follower/following counts endpoint without exposing individual follow relationships. (HTTP handler test passed)
@@ -103,7 +103,7 @@ go test ./internal/post/... ./internal/comment/...
 Pass checks:
 
 ```bash
-go test ./internal/group/... ./internal/notification/...
+go test ./...
 ```
 
 ## 4. Premium entitlement
