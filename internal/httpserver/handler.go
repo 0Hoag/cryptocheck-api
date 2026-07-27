@@ -35,6 +35,7 @@ import (
 	"github.com/0Hoag/cryptocheck-api/internal/notification"
 	notificationHTTP "github.com/0Hoag/cryptocheck-api/internal/notification/delivery/http"
 	prelaunchHTTP "github.com/0Hoag/cryptocheck-api/internal/prelaunch/delivery/http"
+	reportHTTP "github.com/0Hoag/cryptocheck-api/internal/report/delivery/http"
 	scanHTTP "github.com/0Hoag/cryptocheck-api/internal/scanner/delivery/http"
 	scanUC "github.com/0Hoag/cryptocheck-api/internal/scanner/usecase"
 
@@ -113,6 +114,7 @@ func (srv HTTPServer) mapHandlers() error {
 	prelaunchHTTP.MapRoutes(newsFeedGroup.Group("/prelaunch-projects"), srv.db, mw)
 	groupHTTP.MapRoutes(newsFeedGroup.Group("/groups"), srv.db, mw)
 	notificationHTTP.MapRoutes(newsFeedGroup.Group("/notifications"), srv.db, mw)
+	reportHTTP.MapRoutes(newsFeedGroup.Group("/reports"), srv.db, mw)
 
 	return nil
 }
