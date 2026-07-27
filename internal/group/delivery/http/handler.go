@@ -10,6 +10,7 @@ import (
 
 	"github.com/0Hoag/cryptocheck-api/internal/middleware"
 	"github.com/0Hoag/cryptocheck-api/internal/models"
+	appNotification "github.com/0Hoag/cryptocheck-api/internal/notification"
 	"github.com/0Hoag/cryptocheck-api/pkg/jwt"
 	pkgMongo "github.com/0Hoag/cryptocheck-api/pkg/mongo"
 	"github.com/0Hoag/cryptocheck-api/pkg/response"
@@ -243,6 +244,11 @@ func (h handler) join(c *gin.Context) {
 		response.Error(c, err)
 		return
 	}
+	eventType, message := "group.member_joined", "A member joined your group"
+	if status == models.GroupMembershipPending {
+		eventType, message = "group.join_requested", "A member requested to join your group"
+	}
+	_ = appNotification.Create(c.Request.Context(), h.db, g.OwnerID, uid, g.ID, eventType, message)
 	response.OK(c, m)
 }
 
@@ -379,6 +385,7 @@ func (h handler) createPost(c *gin.Context) {
 		response.Error(c, err)
 		return
 	}
+	_ = appNotification.Create(c.Request.Context(), h.db, g.OwnerID, uid, g.ID, "group.post_created", "A new post was published in your group")
 	response.OK(c, p)
 }
 
@@ -472,6 +479,9 @@ func (h handler) updateMember(c *gin.Context) {
 	if _, err := h.db.Collection(membershipsCollection).UpdateOne(c.Request.Context(), bson.M{"_id": target.ID}, bson.M{"$set": changes}); err != nil {
 		response.Error(c, err)
 		return
+	}
+	if req.Status == models.GroupMembershipActive {
+		_ = appNotification.Create(c.Request.Context(), h.db, target.UserID, actor.UserID, g.ID, "group.membership_approved", "Your request to join a group was approved")
 	}
 	response.OK(c, target)
 }

@@ -32,6 +32,8 @@ import (
 	authUC "github.com/0Hoag/cryptocheck-api/internal/auth/usecase"
 
 	groupHTTP "github.com/0Hoag/cryptocheck-api/internal/group/delivery/http"
+	"github.com/0Hoag/cryptocheck-api/internal/notification"
+	notificationHTTP "github.com/0Hoag/cryptocheck-api/internal/notification/delivery/http"
 	prelaunchHTTP "github.com/0Hoag/cryptocheck-api/internal/prelaunch/delivery/http"
 	scanHTTP "github.com/0Hoag/cryptocheck-api/internal/scanner/delivery/http"
 	scanUC "github.com/0Hoag/cryptocheck-api/internal/scanner/usecase"
@@ -49,6 +51,9 @@ func (srv HTTPServer) mapHandlers() error {
 	jwtManager := jwt.NewManager(srv.jwtSecretKey)
 	if err := groupHTTP.EnsureIndexes(context.Background(), srv.db); err != nil {
 		return fmt.Errorf("create group indexes: %w", err)
+	}
+	if err := notification.EnsureIndexes(context.Background(), srv.db); err != nil {
+		return fmt.Errorf("create notification indexes: %w", err)
 	}
 
 	// RabbitMQ is optional in local development. Avoid opening a channel on an
@@ -107,6 +112,7 @@ func (srv HTTPServer) mapHandlers() error {
 	scanHTTP.MapRoutes(newsFeedGroup.Group("/scanner"), scanH, mw)
 	prelaunchHTTP.MapRoutes(newsFeedGroup.Group("/prelaunch-projects"), srv.db, mw)
 	groupHTTP.MapRoutes(newsFeedGroup.Group("/groups"), srv.db, mw)
+	notificationHTTP.MapRoutes(newsFeedGroup.Group("/notifications"), srv.db, mw)
 
 	return nil
 }
