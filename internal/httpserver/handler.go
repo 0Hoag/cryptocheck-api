@@ -31,6 +31,7 @@ import (
 	authHTTP "github.com/0Hoag/cryptocheck-api/internal/auth/delivery/http"
 	authUC "github.com/0Hoag/cryptocheck-api/internal/auth/usecase"
 
+	"github.com/0Hoag/cryptocheck-api/internal/entitlement"
 	groupHTTP "github.com/0Hoag/cryptocheck-api/internal/group/delivery/http"
 	"github.com/0Hoag/cryptocheck-api/internal/notification"
 	notificationHTTP "github.com/0Hoag/cryptocheck-api/internal/notification/delivery/http"
@@ -52,6 +53,9 @@ func (srv HTTPServer) mapHandlers() error {
 	jwtManager := jwt.NewManager(srv.jwtSecretKey)
 	if err := groupHTTP.EnsureIndexes(context.Background(), srv.db); err != nil {
 		return fmt.Errorf("create group indexes: %w", err)
+	}
+	if err := entitlement.EnsureIndexes(context.Background(), srv.db); err != nil {
+		return fmt.Errorf("create entitlement indexes: %w", err)
 	}
 	if err := notification.EnsureIndexes(context.Background(), srv.db); err != nil {
 		return fmt.Errorf("create notification indexes: %w", err)

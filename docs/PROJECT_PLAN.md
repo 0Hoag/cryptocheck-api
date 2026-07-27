@@ -108,8 +108,8 @@ go test ./...
 
 ## 4. Premium entitlement
 
-- [ ] Model plans, subscriptions, entitlement periods and payment-provider references.
-- [ ] Add middleware/service to evaluate entitlements; never trust a client-side Premium flag.
+- [x] Model plans, subscriptions, entitlement periods and payment-provider references. (Mongo indexes + entitlement unit test + full Go suite passed)
+- [x] Add middleware/service to evaluate entitlements; never trust a client-side Premium flag. Server-side service evaluates active subscription status and entitlement period only. (unit test + full Go suite passed)
 - [ ] Gate private group creation and enhanced scanner quotas/depth with entitlement checks.
 - [ ] Choose payment provider and implement webhook signature verification before enabling billing.
 - [ ] Add cancellation, expiry and downgrade behavior tests.
