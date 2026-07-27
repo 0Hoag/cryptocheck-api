@@ -68,7 +68,7 @@ func (uc impleUsecase) getPostNoti(ctx context.Context, sc models.Scope, input g
 			return notification.Notification{}, err
 		}
 
-		headings[lang] = content
+		contents[lang] = content
 
 	}
 
