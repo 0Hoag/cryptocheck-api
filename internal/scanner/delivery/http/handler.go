@@ -2,10 +2,12 @@ package http
 
 import (
 	"context"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/0Hoag/cryptocheck-api/internal/entitlement"
 	"github.com/0Hoag/cryptocheck-api/internal/models"
 	"github.com/0Hoag/cryptocheck-api/internal/scanner"
 	"github.com/0Hoag/cryptocheck-api/pkg/jwt"
@@ -42,6 +44,9 @@ func (h handler) ScanToken(c *gin.Context) {
 		response.Error(c, err)
 		return
 	}
+	if !h.withinQuota(c) {
+		return
+	}
 
 	token, err := h.uc.ScanToken(ctx, req.ToScanTokenInput())
 	if err != nil {
@@ -53,6 +58,34 @@ func (h handler) ScanToken(c *gin.Context) {
 	h.recordHistory(ctx, req.Token, token)
 
 	response.OK(c, h.ToScanTokenOutput(token))
+}
+
+func (h handler) withinQuota(c *gin.Context) bool {
+	scope, ok := jwt.GetScopeFromContext(c.Request.Context())
+	if !ok || scope.UserID == "" {
+		return true // anonymous scans are intentionally limited by the edge/WAF.
+	}
+	ownerID, err := primitive.ObjectIDFromHex(scope.UserID)
+	if err != nil {
+		response.Unauthorized(c)
+		return false
+	}
+	limit := int64(20)
+	plan := "free"
+	if entitlement.Has(c.Request.Context(), h.db, ownerID, "premium", time.Now().UTC()) {
+		limit, plan = 200, "premium"
+	}
+	start := time.Now().UTC().Truncate(24 * time.Hour)
+	used, err := h.db.Collection(scanHistoryCollection).CountDocuments(c.Request.Context(), bson.M{"owner_id": ownerID, "created_at": bson.M{"$gte": start}})
+	if err != nil {
+		response.Error(c, err)
+		return false
+	}
+	if used >= limit {
+		c.JSON(http.StatusTooManyRequests, response.Resp{ErrorCode: 429, Message: "daily scanner quota reached for " + plan + " plan", Data: gin.H{"limit": limit, "used": used, "plan": plan}})
+		return false
+	}
+	return true
 }
 
 // History returns only the current user's successful scan records.
