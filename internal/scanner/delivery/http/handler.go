@@ -20,6 +20,7 @@ import (
 
 const scanHistoryCollection = "scanner_history"
 const scanEngineVersion = "scanner-v1"
+const freeDailyScanLimit int64 = 2
 
 // @Summary Scanner token
 // @Schemes
@@ -70,11 +71,11 @@ func (h handler) withinQuota(c *gin.Context) bool {
 		response.Unauthorized(c)
 		return false
 	}
-	limit := int64(20)
-	plan := "free"
 	if entitlement.Has(c.Request.Context(), h.db, ownerID, "premium", time.Now().UTC()) {
-		limit, plan = 200, "premium"
+		return true
 	}
+	limit := freeDailyScanLimit
+	plan := "free"
 	start := time.Now().UTC().Truncate(24 * time.Hour)
 	used, err := h.db.Collection(scanHistoryCollection).CountDocuments(c.Request.Context(), bson.M{"owner_id": ownerID, "created_at": bson.M{"$gte": start}})
 	if err != nil {
