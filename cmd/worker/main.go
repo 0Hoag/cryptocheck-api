@@ -79,7 +79,7 @@ func main() {
 
 	// Usecases
 	uUC := userUC.New(l, userRepo)
-	pUC := postUC.New(l, producer, uUC, postRepo)
+	pUC := postUC.New(l, producer, uUC, postRepo, db)
 
 	// Crawler & Processor
 	crawlMgr := crawler.NewManager(l)

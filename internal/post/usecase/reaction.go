@@ -4,8 +4,10 @@ import (
 	"context"
 
 	"github.com/0Hoag/cryptocheck-api/internal/models"
+	appNotification "github.com/0Hoag/cryptocheck-api/internal/notification"
 	"github.com/0Hoag/cryptocheck-api/internal/post"
 	"github.com/0Hoag/cryptocheck-api/internal/post/repository"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (uc impleUsecase) CreateReaction(ctx context.Context, sc models.Scope, input post.CreateReactionInput) (models.Reaction, error) {
@@ -13,7 +15,7 @@ func (uc impleUsecase) CreateReaction(ctx context.Context, sc models.Scope, inpu
 		return models.Reaction{}, post.ErrInvalidReactionType
 	}
 
-	_, err := uc.repo.Detail(ctx, sc, input.PostID)
+	p, err := uc.repo.Detail(ctx, sc, input.PostID)
 	if err != nil {
 		uc.l.Errorf(ctx, "post.usecase.CreateReaction.Detail: %v", err)
 		return models.Reaction{}, err
@@ -39,6 +41,12 @@ func (uc impleUsecase) CreateReaction(ctx context.Context, sc models.Scope, inpu
 	if err != nil {
 		uc.l.Errorf(ctx, "post.usecase.CreateReaction.CreateReaction: %v", err)
 		return models.Reaction{}, err
+	}
+	if uc.db != nil {
+		actorID, parseErr := primitive.ObjectIDFromHex(sc.UserID)
+		if parseErr == nil {
+			_ = appNotification.Create(ctx, uc.db, p.AuthorID, actorID, p.ID, "post.reaction_created", "Someone reacted to your post")
+		}
 	}
 
 	return reaction, nil

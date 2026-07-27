@@ -97,8 +97,7 @@ go test ./internal/post/... ./internal/comment/...
 - [x] Add authenticated follow/unfollow and author-filtered profile feed endpoints (integration tested).
 - [x] Add a public aggregate follower/following counts endpoint without exposing individual follow relationships. (HTTP handler test passed)
 - [x] Restrict individual follow relationship/detail access to the relationship owner; profiles expose only public aggregate counts. (table-driven usecase tests passed)
-- [ ] Add notifications for reactions, comments, follows and group events.
-  - [x] Foundation: persisted per-user notification feed with read/read-all endpoints and group join, approval, and new-post events. (full Go suite passed)
+- [x] Add notifications for reactions, comments, follows and group events. Persisted per-user feed supports read/read-all; group join, approval, and new-post events plus post reaction/comment and follow events are emitted without self-notifications. (social usecase tests + full Go suite passed)
 - [ ] Add reporting/moderation audit trail for posts and comments.
 
 Pass checks:

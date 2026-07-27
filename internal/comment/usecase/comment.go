@@ -6,10 +6,12 @@ import (
 	"github.com/0Hoag/cryptocheck-api/internal/comment"
 	"github.com/0Hoag/cryptocheck-api/internal/comment/repository"
 	"github.com/0Hoag/cryptocheck-api/internal/models"
+	appNotification "github.com/0Hoag/cryptocheck-api/internal/notification"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (uc impleUsecase) Create(ctx context.Context, sc models.Scope, input comment.CreateInput) (models.Comment, error) {
-	_, err := uc.postUC.Detail(ctx, sc, input.PostID)
+	p, err := uc.postUC.Detail(ctx, sc, input.PostID)
 	if err != nil {
 		uc.l.Errorf(ctx, "comment.usecase.Create.Detail: %v", err)
 		return models.Comment{}, err
@@ -23,6 +25,12 @@ func (uc impleUsecase) Create(ctx context.Context, sc models.Scope, input commen
 	if err != nil {
 		uc.l.Errorf(ctx, "comment.usecase.Create.Create: %v", err)
 		return models.Comment{}, err
+	}
+	if uc.db != nil {
+		actorID, parseErr := primitive.ObjectIDFromHex(sc.UserID)
+		if parseErr == nil {
+			_ = appNotification.Create(ctx, uc.db, p.AuthorID, actorID, p.ID, "post.comment_created", "Someone commented on your post")
+		}
 	}
 
 	return comment, nil

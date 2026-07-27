@@ -6,7 +6,9 @@ import (
 	"github.com/0Hoag/cryptocheck-api/internal/follow"
 	"github.com/0Hoag/cryptocheck-api/internal/follow/repository"
 	"github.com/0Hoag/cryptocheck-api/internal/models"
+	appNotification "github.com/0Hoag/cryptocheck-api/internal/notification"
 	"github.com/0Hoag/cryptocheck-api/internal/users"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (uc impleUsecase) Create(ctx context.Context, sc models.Scope, input follow.CreateInput) (models.Follow, error) {
@@ -36,6 +38,13 @@ func (uc impleUsecase) Create(ctx context.Context, sc models.Scope, input follow
 	if err != nil {
 		uc.l.Errorf(ctx, "follow.usecase.Create.Create: %v", err)
 		return models.Follow{}, err
+	}
+	if uc.db != nil {
+		followerID, parseErr := primitive.ObjectIDFromHex(sc.UserID)
+		followeeID, followeeErr := primitive.ObjectIDFromHex(input.FolloweeID)
+		if parseErr == nil && followeeErr == nil {
+			_ = appNotification.Create(ctx, uc.db, followeeID, followerID, created.ID, "user.followed", "You have a new follower")
+		}
 	}
 
 	return created, nil

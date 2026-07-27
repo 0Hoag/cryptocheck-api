@@ -76,9 +76,9 @@ func (srv HTTPServer) mapHandlers() error {
 
 	// Usecases
 	userUC := userUC.New(srv.l, userRepo)
-	postUC := postUC.New(srv.l, postProd, userUC, postRepo)
-	followUC := followUC.New(srv.l, userUC, followRepo)
-	commentUC := commentUC.New(srv.l, postUC, commentRepo)
+	postUC := postUC.New(srv.l, postProd, userUC, postRepo, srv.db)
+	followUC := followUC.New(srv.l, userUC, followRepo, srv.db)
+	commentUC := commentUC.New(srv.l, postUC, commentRepo, srv.db)
 	authUC := authUC.New(srv.l, cfg, userUC)
 	scanUsecase := srv.scannerUC
 	if scanUsecase == nil {
