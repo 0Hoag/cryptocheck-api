@@ -16,6 +16,7 @@ type Post struct {
 	TaggedTarget  []primitive.ObjectID `bson:"tagged_target,omitempty"`
 	Permission    PrivacyType          `bson:"permission,omitempty"`
 	AuthorID      primitive.ObjectID   `bson:"author_id"`
+	GroupID       *primitive.ObjectID  `bson:"group_id,omitempty" json:"group_id,omitempty"`
 	SourceURL     string               `bson:"source_url,omitempty"`
 	FullContent   string               `bson:"full_content,omitempty"`    // Complete article text (VI)
 	FullContentEn string               `bson:"full_content_en,omitempty"` // Complete article text (EN)

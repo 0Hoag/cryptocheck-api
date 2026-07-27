@@ -34,3 +34,21 @@ func TestMemberRoleAndStatusContract(t *testing.T) {
 		t.Fatal("group states must be distinct")
 	}
 }
+
+func TestModeratorPermissions(t *testing.T) {
+	if !canModerate(models.GroupRoleOwner) || !canModerate(models.GroupRoleAdmin) || !canModerate(models.GroupRoleModerator) {
+		t.Fatal("owner, admin and moderator must be able to moderate group posts")
+	}
+	if canModerate(models.GroupRoleMember) {
+		t.Fatal("regular member must not be able to moderate group posts")
+	}
+}
+
+func TestGroupPostRequestValidation(t *testing.T) {
+	if !((groupPostRequest{Content: "Market update", SourceURL: "https://example.com"}).normalized().valid()) {
+		t.Fatal("a valid group post was rejected")
+	}
+	if (groupPostRequest{Content: "", SourceURL: "https://example.com"}).normalized().valid() {
+		t.Fatal("empty group post must be rejected")
+	}
+}

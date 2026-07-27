@@ -29,12 +29,15 @@ func MapRoutes(r *gin.RouterGroup, db pkgMongo.Database, mw middleware.Middlewar
 	h := handler{db: db}
 	r.GET("", mw.OptionalAuth(), h.list)
 	r.GET("/:id", mw.OptionalAuth(), h.detail)
+	r.GET("/:id/posts", mw.OptionalAuth(), h.posts)
 	auth := r.Group("")
 	auth.Use(mw.Auth())
 	auth.POST("", h.create)
 	auth.PATCH("/:id", h.update)
 	auth.DELETE("/:id", h.remove)
 	auth.POST("/:id/join", h.join)
+	auth.POST("/:id/posts", h.createPost)
+	auth.DELETE("/:id/posts/:postID", h.removePost)
 	auth.DELETE("/:id/members/me", h.leave)
 	auth.GET("/:id/members", h.members)
 	auth.PATCH("/:id/members/:userID", h.updateMember)
@@ -282,6 +285,124 @@ func (h handler) members(c *gin.Context) {
 type memberRequest struct {
 	Role   models.GroupRole             `json:"role"`
 	Status models.GroupMembershipStatus `json:"status"`
+}
+
+type groupPostRequest struct {
+	Title     string `json:"title"`
+	Content   string `json:"content"`
+	SourceURL string `json:"source_url"`
+}
+
+func (r groupPostRequest) normalized() groupPostRequest {
+	r.Title, r.Content, r.SourceURL = strings.TrimSpace(r.Title), strings.TrimSpace(r.Content), strings.TrimSpace(r.SourceURL)
+	return r
+}
+
+func (r groupPostRequest) valid() bool {
+	if len(r.Content) == 0 || len(r.Content) > 10000 || len(r.Title) > 250 {
+		return false
+	}
+	if r.SourceURL == "" {
+		return true
+	}
+	u, err := url.ParseRequestURI(r.SourceURL)
+	return err == nil && (u.Scheme == "https" || u.Scheme == "http") && u.Host != ""
+}
+
+func (h handler) posts(c *gin.Context) {
+	g, ok := h.group(c)
+	if !ok {
+		return
+	}
+	m := h.membershipFor(c, g.ID)
+	if g.Visibility == models.GroupVisibilityPrivate && (m == nil || m.Status != models.GroupMembershipActive) {
+		response.Forbidden(c)
+		return
+	}
+	cur, err := h.db.Collection("posts").Find(c.Request.Context(), bson.M{"group_id": g.ID, "deleted_at": bson.M{"$exists": false}}, options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}}).SetLimit(50))
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	defer cur.Close(c.Request.Context())
+	var posts []models.Post
+	if err := cur.All(c.Request.Context(), &posts); err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.OK(c, posts)
+}
+
+func (h handler) createPost(c *gin.Context) {
+	g, ok := h.group(c)
+	if !ok {
+		return
+	}
+	m := h.membershipFor(c, g.ID)
+	if m == nil || m.Status != models.GroupMembershipActive {
+		response.Forbidden(c)
+		return
+	}
+	uid, ok := userID(c)
+	if !ok {
+		response.Unauthorized(c)
+		return
+	}
+	var req groupPostRequest
+	if c.ShouldBindJSON(&req) != nil {
+		badRequest(c, "content is required and source_url must be valid when supplied")
+		return
+	}
+	req = req.normalized()
+	if !req.valid() {
+		badRequest(c, "content is required and source_url must be valid when supplied")
+		return
+	}
+	now := time.Now().UTC()
+	groupID := g.ID
+	p := models.Post{ID: h.db.NewObjectID(), GroupID: &groupID, AuthorID: uid, Title: req.Title, Content: req.Content, SourceURL: req.SourceURL, Permission: models.PrivacyTypePublic, CreatedAt: now, UpdatedAt: now}
+	if _, err := h.db.Collection("posts").InsertOne(c.Request.Context(), p); err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.OK(c, p)
+}
+
+func (h handler) removePost(c *gin.Context) {
+	g, ok := h.group(c)
+	if !ok {
+		return
+	}
+	m := h.membershipFor(c, g.ID)
+	if m == nil || m.Status != models.GroupMembershipActive {
+		response.Forbidden(c)
+		return
+	}
+	postID, err := primitive.ObjectIDFromHex(c.Param("postID"))
+	if err != nil {
+		badRequest(c, "invalid post id")
+		return
+	}
+	var p models.Post
+	if err := h.db.Collection("posts").FindOne(c.Request.Context(), bson.M{"_id": postID, "group_id": g.ID, "deleted_at": bson.M{"$exists": false}}).Decode(&p); err != nil {
+		c.JSON(http.StatusNotFound, response.Resp{ErrorCode: 404, Message: "group post not found"})
+		return
+	}
+	uid, _ := userID(c)
+	if p.AuthorID != uid && !canModerate(m.Role) {
+		response.Forbidden(c)
+		return
+	}
+	now := time.Now().UTC()
+	if _, err := h.db.Collection("posts").UpdateOne(c.Request.Context(), bson.M{"_id": p.ID}, bson.M{"$set": bson.M{"deleted_at": now, "updated_at": now}}); err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.OK(c, gin.H{"deleted": true})
+}
+
+func canModerate(role models.GroupRole) bool {
+	return role == models.GroupRoleOwner || role == models.GroupRoleAdmin || role == models.GroupRoleModerator
 }
 
 func (h handler) updateMember(c *gin.Context) {
