@@ -47,6 +47,9 @@ func (srv HTTPServer) mapHandlers() error {
 		return fmt.Errorf("load application configuration: %w", err)
 	}
 	jwtManager := jwt.NewManager(srv.jwtSecretKey)
+	if err := groupHTTP.EnsureIndexes(context.Background(), srv.db); err != nil {
+		return fmt.Errorf("create group indexes: %w", err)
+	}
 
 	// RabbitMQ is optional in local development. Avoid opening a channel on an
 	// empty AMQP connection when the broker is unavailable.

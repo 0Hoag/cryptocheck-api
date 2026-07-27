@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -24,6 +25,19 @@ const (
 )
 
 type handler struct{ db pkgMongo.Database }
+
+// EnsureIndexes protects the domain invariants even when requests arrive concurrently.
+func EnsureIndexes(ctx context.Context, db pkgMongo.Database) error {
+	activeGroup := bson.M{"deleted_at": bson.M{"$exists": false}}
+	if _, err := db.Collection(groupsCollection).CreateIndex(ctx, bson.D{{Key: "slug", Value: 1}}, options.Index().SetName("unique_active_group_slug").SetUnique(true).SetPartialFilterExpression(activeGroup)); err != nil {
+		return err
+	}
+	if _, err := db.Collection(membershipsCollection).CreateIndex(ctx, bson.D{{Key: "group_id", Value: 1}, {Key: "user_id", Value: 1}}, options.Index().SetName("unique_group_member").SetUnique(true)); err != nil {
+		return err
+	}
+	_, err := db.Collection("posts").CreateIndex(ctx, bson.D{{Key: "group_id", Value: 1}, {Key: "created_at", Value: -1}}, options.Index().SetName("group_post_feed"))
+	return err
+}
 
 func MapRoutes(r *gin.RouterGroup, db pkgMongo.Database, mw middleware.Middleware) {
 	h := handler{db: db}
