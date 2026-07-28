@@ -115,8 +115,8 @@ func (h handler) create(c *gin.Context) {
 		response.Unauthorized(c)
 		return
 	}
-	if req.Visibility == models.GroupVisibilityPrivate && !entitlement.Has(c.Request.Context(), h.db, owner, "premium", time.Now().UTC()) {
-		c.JSON(http.StatusForbidden, response.Resp{ErrorCode: 403, Message: "an active premium subscription is required to create a private group"})
+	if !entitlement.Has(c.Request.Context(), h.db, owner, "premium", time.Now().UTC()) {
+		c.JSON(http.StatusForbidden, response.Resp{ErrorCode: 403, Message: "an active premium subscription is required to create a group"})
 		return
 	}
 	if h.slugTaken(c, req.Slug, primitive.NilObjectID) {
