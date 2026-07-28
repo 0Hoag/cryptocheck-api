@@ -12,6 +12,7 @@ type Handler interface {
 	ScanToken(c *gin.Context)
 	FindCandidates(c *gin.Context)
 	History(c *gin.Context)
+	Quota(c *gin.Context)
 }
 
 type handler struct {

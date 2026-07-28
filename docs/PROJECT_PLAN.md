@@ -113,6 +113,7 @@ go test ./...
 - [ ] Gate private group creation and enhanced scanner quotas/depth with entitlement checks.
   - [x] Private group creation requires an active server-side `premium` subscription; public groups remain available. (group package + full Go suite passed)
   - [x] Authenticated scanner quota is enforced from persisted server-side history: Free 2 successful scans/day; Premium unlimited. (scanner package + full Go suite passed)
+  - [x] Expose the authenticated scanner quota/plan endpoint so clients render Free/Premium limits from server-side entitlement data. (scanner HTTP tests passed)
 - [ ] Choose payment provider and implement webhook signature verification before enabling billing.
 - [ ] Add cancellation, expiry and downgrade behavior tests.
 

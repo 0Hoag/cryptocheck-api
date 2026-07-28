@@ -12,4 +12,5 @@ func MapRoutes(r *gin.RouterGroup, h Handler, mw middleware.Middleware) {
 	authenticated := r.Group("")
 	authenticated.Use(mw.Auth())
 	authenticated.GET("/history", h.History)
+	authenticated.GET("/quota", h.Quota)
 }

@@ -22,6 +22,13 @@ const scanHistoryCollection = "scanner_history"
 const scanEngineVersion = "scanner-v1"
 const freeDailyScanLimit int64 = 2
 
+type scanQuota struct {
+	Plan      string `json:"plan"`
+	Limit     int64  `json:"limit"`
+	Used      int64  `json:"used"`
+	Unlimited bool   `json:"unlimited"`
+}
+
 // @Summary Scanner token
 // @Schemes
 // @Description Scanner token
@@ -71,22 +78,52 @@ func (h handler) withinQuota(c *gin.Context) bool {
 		response.Unauthorized(c)
 		return false
 	}
-	if entitlement.Has(c.Request.Context(), h.db, ownerID, "premium", time.Now().UTC()) {
-		return true
-	}
-	limit := freeDailyScanLimit
-	plan := "free"
-	start := time.Now().UTC().Truncate(24 * time.Hour)
-	used, err := h.db.Collection(scanHistoryCollection).CountDocuments(c.Request.Context(), bson.M{"owner_id": ownerID, "created_at": bson.M{"$gte": start}})
+	quota, err := h.quotaForOwner(c.Request.Context(), ownerID, time.Now().UTC())
 	if err != nil {
 		response.Error(c, err)
 		return false
 	}
-	if used >= limit {
-		c.JSON(http.StatusTooManyRequests, response.Resp{ErrorCode: 429, Message: "daily scanner quota reached for " + plan + " plan", Data: gin.H{"limit": limit, "used": used, "plan": plan}})
+	if !quota.Unlimited && quota.Used >= quota.Limit {
+		c.JSON(http.StatusTooManyRequests, response.Resp{ErrorCode: 429, Message: "daily scanner quota reached for " + quota.Plan + " plan", Data: quota})
 		return false
 	}
 	return true
+}
+
+func (h handler) quotaForOwner(ctx context.Context, ownerID primitive.ObjectID, now time.Time) (scanQuota, error) {
+	if entitlement.Has(ctx, h.db, ownerID, "premium", now) {
+		return scanQuota{Plan: "premium", Unlimited: true}, nil
+	}
+	start := now.Truncate(24 * time.Hour)
+	used, err := h.db.Collection(scanHistoryCollection).CountDocuments(ctx, bson.M{"owner_id": ownerID, "created_at": bson.M{"$gte": start}})
+	if err != nil {
+		return scanQuota{}, err
+	}
+	return scanQuota{Plan: "free", Limit: freeDailyScanLimit, Used: used}, nil
+}
+
+// Quota returns the current authenticated account's scanner entitlement and
+// successful scans used today. The client uses this response as the source of
+// truth for Free/Premium labels instead of hard-coding an allowance.
+func (h handler) Quota(c *gin.Context) {
+	ctx := c.Request.Context()
+	scope, ok := jwt.GetScopeFromContext(ctx)
+	if !ok || scope.UserID == "" {
+		response.Unauthorized(c)
+		return
+	}
+	ownerID, err := primitive.ObjectIDFromHex(scope.UserID)
+	if err != nil {
+		response.Unauthorized(c)
+		return
+	}
+	quota, err := h.quotaForOwner(ctx, ownerID, time.Now().UTC())
+	if err != nil {
+		h.l.Errorf(ctx, "scanner.delivery.http.Quota: %v", err)
+		response.Error(c, err)
+		return
+	}
+	response.OK(c, quota)
 }
 
 // History returns only the current user's successful scan records.
