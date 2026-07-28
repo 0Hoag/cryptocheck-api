@@ -194,6 +194,10 @@ func (h handler) update(c *gin.Context) {
 		badRequest(c, "group slug is already in use")
 		return
 	}
+	if req.Visibility == models.GroupVisibilityPrivate && !entitlement.Has(c.Request.Context(), h.db, g.OwnerID, "premium", time.Now().UTC()) {
+		c.JSON(http.StatusForbidden, response.Resp{ErrorCode: 403, Message: "an active premium subscription is required to make a group private"})
+		return
+	}
 	g.Name, g.Slug, g.Description, g.AvatarURL, g.Visibility, g.JoinPolicy, g.UpdatedAt = req.Name, req.Slug, req.Description, req.AvatarURL, req.Visibility, req.JoinPolicy, time.Now().UTC()
 	if _, err := h.db.Collection(groupsCollection).UpdateOne(c.Request.Context(), bson.M{"_id": g.ID}, bson.M{"$set": g}); err != nil {
 		response.Error(c, err)

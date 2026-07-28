@@ -112,6 +112,7 @@ go test ./...
 - [x] Add middleware/service to evaluate entitlements; never trust a client-side Premium flag. Server-side service evaluates active subscription status and entitlement period only. (unit test + full Go suite passed)
 - [ ] Gate private group creation and enhanced scanner quotas/depth with entitlement checks.
   - [x] Private group creation requires an active server-side `premium` subscription; public groups remain available. (group package + full Go suite passed)
+  - [x] Private group visibility updates require the same active server-side `premium` subscription, preventing an owner from bypassing the create-time check. (group handler package passed)
   - [x] Authenticated scanner quota is enforced from persisted server-side history: Free 2 successful scans/day; Premium unlimited. (scanner package + full Go suite passed)
   - [x] Expose the authenticated scanner quota/plan endpoint so clients render Free/Premium limits from server-side entitlement data. (scanner HTTP tests passed)
 - [ ] Choose payment provider and implement webhook signature verification before enabling billing.
