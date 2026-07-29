@@ -1,6 +1,8 @@
 package http
 
 import (
+	"time"
+
 	"github.com/0Hoag/cryptocheck-api/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
@@ -10,8 +12,10 @@ func MapRoutes(r *gin.RouterGroup, h Handler, mw middleware.Middleware) {
 
 	authenticated := r.Group("")
 	authenticated.Use(mw.Auth())
-	authenticated.POST("", h.Create)
+	writes := authenticated.Group("")
+	writes.Use(mw.RateLimit(30, time.Minute))
+	writes.POST("", h.Create)
 	authenticated.GET("/:id", h.Detail)
 	authenticated.GET("", h.Get)
-	authenticated.DELETE("/:id", h.Delete)
+	writes.DELETE("/:id", h.Delete)
 }

@@ -1,6 +1,8 @@
 package http
 
 import (
+	"time"
+
 	"github.com/0Hoag/cryptocheck-api/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
@@ -12,7 +14,7 @@ func MapRoutes(r *gin.RouterGroup, h Handler, mw middleware.Middleware) {
 
 	// Protected routes (auth required)
 	authenticated := r.Group("")
-	authenticated.Use(mw.Auth())
+	authenticated.Use(mw.Auth(), mw.RateLimit(30, time.Minute))
 	authenticated.POST("", h.Create)
 	authenticated.PUT("", h.Update)
 	authenticated.DELETE("/:id", h.Delete)
@@ -23,8 +25,10 @@ func MapRoutes(r *gin.RouterGroup, h Handler, mw middleware.Middleware) {
 func mapReactionRoutes(r *gin.RouterGroup, h Handler, mw middleware.Middleware) {
 	reaction := r.Group("/reaction")
 	reaction.Use(mw.Auth())
-	reaction.POST("", h.CreateReaction)
+	reactionWrites := reaction.Group("")
+	reactionWrites.Use(mw.RateLimit(30, time.Minute))
+	reactionWrites.POST("", h.CreateReaction)
 	reaction.GET("/:id", h.DetailReaction)
 	reaction.GET("", h.GetReaction)
-	reaction.DELETE("/:id", h.DeleteReaction)
+	reactionWrites.DELETE("/:id", h.DeleteReaction)
 }

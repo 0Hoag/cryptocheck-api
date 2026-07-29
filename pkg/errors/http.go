@@ -33,6 +33,14 @@ func NewForbiddenHTTPError() *HTTPError {
 	}
 }
 
+func NewTooManyRequestsHTTPError() *HTTPError {
+	return &HTTPError{
+		Code:       http.StatusTooManyRequests,
+		Message:    "Too many requests. Please try again shortly.",
+		StatusCode: http.StatusTooManyRequests,
+	}
+}
+
 // Error returns the error message.
 func (e HTTPError) Error() string {
 	return e.Message
