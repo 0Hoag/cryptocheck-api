@@ -123,7 +123,7 @@ go test ./...
   - [x] Authenticated scanner quota is enforced from persisted server-side history: Free 2 successful scans/day; Premium unlimited. (scanner package + full Go suite passed)
   - [x] Expose the authenticated scanner quota/plan endpoint so clients render Free/Premium limits from server-side entitlement data. (scanner HTTP tests passed)
 - [ ] Choose payment provider and implement webhook signature verification before enabling billing.
-- [ ] Add cancellation, expiry and downgrade behavior tests.
+- [x] Add cancellation, expiry and downgrade behavior tests. Entitlement is active only for an `active` subscription strictly inside its configured period; cancelled, provider-failed, expired and future subscriptions downgrade immediately. (table-driven entitlement tests + full Go suite passed)
 
 ## 5. Production hardening
 
