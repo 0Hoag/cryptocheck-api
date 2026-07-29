@@ -1,5 +1,7 @@
 package http
 
+import "strings"
+
 import (
 	scan "github.com/0Hoag/cryptocheck-api/internal/core/scanner"
 	"github.com/0Hoag/cryptocheck-api/internal/scanner"
@@ -16,13 +18,13 @@ func (r scannerTokenInput) ToScanTokenInput() scanner.ScanTokenInput {
 		lang = "en" // Default to English
 	}
 	return scanner.ScanTokenInput{
-		Token:    r.Token,
+		Token:    strings.TrimSpace(r.Token),
 		Language: lang,
 	}
 }
 
 func (r scannerTokenInput) validate() error {
-	if len(r.Token) == 0 {
+	if len(strings.TrimSpace(r.Token)) == 0 {
 		return errWrongBody
 	}
 
