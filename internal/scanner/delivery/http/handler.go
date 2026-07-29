@@ -43,6 +43,7 @@ type scanQuota struct {
 // @Failure 400 {object} response.Resp "Bad Request"
 // @Router /news-feed/scanner [GET]
 func (h handler) ScanToken(c *gin.Context) {
+	c.Header("Cache-Control", "no-store")
 	ctx := c.Request.Context()
 
 	req, err := h.processRequest(c)
@@ -197,6 +198,7 @@ func (h handler) recordHistory(ctx context.Context, input string, token scanner.
 // FindCandidates returns the strongest DexScreener matches before the client
 // chooses a symbol that can exist on more than one chain.
 func (h handler) FindCandidates(c *gin.Context) {
+	c.Header("Cache-Control", "no-store")
 	ctx := c.Request.Context()
 	req, err := h.processRequest(c)
 	if err != nil {
