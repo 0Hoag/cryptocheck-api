@@ -5,11 +5,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gocolly/colly/v2"
 	"github.com/0Hoag/cryptocheck-api/internal/crawler"
+	"github.com/gocolly/colly/v2"
 )
 
 type CoindeskCrawler struct {
+}
+
+func parsePublishedAt(value string, fallback time.Time) time.Time {
+	publishedAt, err := time.Parse(time.RFC3339, strings.TrimSpace(value))
+	if err != nil {
+		return fallback
+	}
+	return publishedAt
 }
 
 func NewCoindeskCrawler() *CoindeskCrawler {
@@ -62,10 +70,14 @@ func (c *CoindeskCrawler) Crawl(ctx context.Context) ([]crawler.Article, error) 
 			// Create detail collector to fetch image and full content
 			detailCollector := collector.Clone()
 			var imageURL string
+			var publishedTime string
 			var fullContent strings.Builder
 
 			detailCollector.OnHTML("meta[property='og:image']", func(e *colly.HTMLElement) {
 				imageURL = e.Attr("content")
+			})
+			detailCollector.OnHTML("meta[property='article:published_time']", func(e *colly.HTMLElement) {
+				publishedTime = e.Attr("content")
 			})
 
 			// Extract article body content
@@ -80,14 +92,15 @@ func (c *CoindeskCrawler) Crawl(ctx context.Context) ([]crawler.Article, error) 
 
 			detailCollector.Visit(link)
 
+			now := time.Now().UTC()
 			articles = append(articles, crawler.Article{
 				Title:       title,
 				SourceURL:   link,
 				ImageURL:    imageURL,
 				Content:     strings.TrimSpace(fullContent.String()), // Full article text
 				Source:      "coindesk",
-				CrawledAt:   time.Now(),
-				PublishedAt: time.Now(),
+				CrawledAt:   now,
+				PublishedAt: parsePublishedAt(publishedTime, now),
 			})
 		}
 	})
