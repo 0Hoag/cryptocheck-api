@@ -81,6 +81,7 @@ func New(l pkgLog.Logger, cfg Config) *HTTPServer {
 
 	engine := gin.Default()
 	engine.Use(middleware.RequestID())
+	engine.Use(middleware.RequestLog(l))
 	if err := engine.SetTrustedProxies(nonEmpty(cfg.TrustedProxies)); err != nil {
 		panic(err)
 	}

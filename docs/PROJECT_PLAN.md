@@ -129,6 +129,7 @@ go test ./...
 - [x] Set release-mode logging, configurable trusted proxies and restrictive CORS origin allow-list (no wildcard credentials). (full API test suite passed)
 - [ ] Add request validation/error contract tests and structured observability.
 	- [x] Expose dependency-free `/healthz` and Mongo-backed `/readyz` probes so deployment monitoring distinguishes a live API process from a database-ready service. (HTTP-server tests + full Go suite passed)
+	- [x] Emit one safe request-completion log with method, route, status, latency and `request_id`, so support can correlate a reported ID without recording bodies, query parameters or credentials. (middleware tests + full Go suite passed)
 	- [x] Emit a safe `X-Request-ID` on every API response and include it in JSON success/error bodies, preserving only validated client-provided IDs for deployment tracing. (middleware tests + full Go suite passed)
 	- [x] Route Scanner quota and history-validation errors through the shared response envelope so quota `429` and invalid-history `400` responses also expose the request correlation ID. (response/scanner tests + full Go suite passed)
 	- [x] Route Group, Notification, Report and Prelaunch controlled errors through the same envelope so all API error paths carry request correlation IDs without changing their existing HTTP statuses or app error codes. (full Go suite passed)
