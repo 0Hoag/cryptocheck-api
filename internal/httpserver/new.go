@@ -4,6 +4,7 @@ import (
 	"github.com/0Hoag/cryptocheck-api/internal/adapters/dexscreener"
 	"github.com/0Hoag/cryptocheck-api/internal/adapters/etherscan"
 	"github.com/0Hoag/cryptocheck-api/internal/core/scanner"
+	"github.com/0Hoag/cryptocheck-api/internal/middleware"
 	scanDomain "github.com/0Hoag/cryptocheck-api/internal/scanner"
 	pkgCrt "github.com/0Hoag/cryptocheck-api/pkg/encrypter"
 	pkgLog "github.com/0Hoag/cryptocheck-api/pkg/log"
@@ -75,6 +76,7 @@ func New(l pkgLog.Logger, cfg Config) *HTTPServer {
 	gin.SetMode(ginMode)
 
 	engine := gin.Default()
+	engine.Use(middleware.RequestID())
 	if err := engine.SetTrustedProxies(nonEmpty(cfg.TrustedProxies)); err != nil {
 		panic(err)
 	}

@@ -16,6 +16,7 @@ type Resp struct {
 	Message   string `json:"message"`
 	Data      any    `json:"data,omitempty"`
 	Errors    any    `json:"errors,omitempty"`
+	RequestID string `json:"request_id,omitempty"`
 }
 
 // NewOKResp returns a new OK response with the given data.
@@ -27,18 +28,27 @@ func NewOKResp(data any) Resp {
 	}
 }
 
+func withRequestID(c *gin.Context, resp Resp) Resp {
+	if requestID := c.GetHeader("X-Request-ID"); requestID != "" {
+		resp.RequestID = requestID
+	}
+	return resp
+}
+
 // Ok returns a new OK response with the given data.
 func OK(c *gin.Context, data any) {
-	c.JSON(http.StatusOK, NewOKResp(data))
+	c.JSON(http.StatusOK, withRequestID(c, NewOKResp(data)))
 }
 
 // Unauthorized returns a new Unauthorized response with the given data.
 func Unauthorized(c *gin.Context) {
-	c.JSON(parseError(pkgErrors.NewUnauthorizedHTTPError(), c))
+	status, resp := parseError(pkgErrors.NewUnauthorizedHTTPError(), c)
+	c.JSON(status, withRequestID(c, resp))
 }
 
 func Forbidden(c *gin.Context) {
-	c.JSON(parseError(pkgErrors.NewForbiddenHTTPError(), c))
+	status, resp := parseError(pkgErrors.NewForbiddenHTTPError(), c)
+	c.JSON(status, withRequestID(c, resp))
 }
 
 func parseError(err error, c *gin.Context) (int, Resp) {
@@ -87,12 +97,14 @@ func parseError(err error, c *gin.Context) (int, Resp) {
 
 // Error returns a new Error response with the given error.
 func Error(c *gin.Context, err error) {
-	c.JSON(parseError(err, c))
+	status, resp := parseError(err, c)
+	c.JSON(status, withRequestID(c, resp))
 }
 
 // HttpError returns a new Error response with the given error.
 func HttpError(c *gin.Context, err *pkgErrors.HTTPError) {
-	c.JSON(parseError(err, c))
+	status, resp := parseError(err, c)
+	c.JSON(status, withRequestID(c, resp))
 }
 
 // ErrorMapping is a map of error to HTTPError.
@@ -169,5 +181,6 @@ func parseErrorWithData(err error, c *gin.Context, data any) (int, Resp) {
 }
 
 func ErrorWithData(c *gin.Context, err error, data any) {
-	c.JSON(parseErrorWithData(err, c, data))
+	status, resp := parseErrorWithData(err, c, data)
+	c.JSON(status, withRequestID(c, resp))
 }
