@@ -52,7 +52,7 @@ func (r projectRequest) valid() bool {
 func (h handler) create(c *gin.Context) {
 	var req projectRequest
 	if c.ShouldBindJSON(&req) != nil || !req.valid() {
-		c.JSON(http.StatusBadRequest, response.Resp{ErrorCode: 400, Message: "name and valid website_url are required"})
+		response.StatusError(c, http.StatusBadRequest, 400, "name and valid website_url are required")
 		return
 	}
 	sc, ok := scope(c)
@@ -108,7 +108,7 @@ func (h handler) update(c *gin.Context) {
 	}
 	var req projectRequest
 	if c.ShouldBindJSON(&req) != nil || !req.valid() {
-		c.JSON(http.StatusBadRequest, response.Resp{ErrorCode: 400, Message: "name and valid website_url are required"})
+		response.StatusError(c, http.StatusBadRequest, 400, "name and valid website_url are required")
 		return
 	}
 	p.Name, p.Symbol, p.WebsiteURL, p.SocialURLs, p.ClaimedChain, p.LaunchAt, p.Evidence = strings.TrimSpace(req.Name), strings.ToUpper(strings.TrimSpace(req.Symbol)), req.WebsiteURL, req.SocialURLs, strings.TrimSpace(req.ClaimedChain), req.LaunchAt, req.Evidence
@@ -139,12 +139,12 @@ func (h handler) remove(c *gin.Context) {
 func (h handler) load(c *gin.Context) (models.PrelaunchProject, bool) {
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, response.Resp{ErrorCode: 400, Message: "invalid project id"})
+		response.StatusError(c, http.StatusBadRequest, 400, "invalid project id")
 		return models.PrelaunchProject{}, false
 	}
 	var p models.PrelaunchProject
 	if err := h.db.Collection(collection).FindOne(c.Request.Context(), bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}).Decode(&p); err != nil {
-		c.JSON(http.StatusNotFound, response.Resp{ErrorCode: 404, Message: "project not found"})
+		response.StatusError(c, http.StatusNotFound, 404, "project not found")
 		return models.PrelaunchProject{}, false
 	}
 	return p, true

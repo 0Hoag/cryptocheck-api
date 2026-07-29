@@ -118,7 +118,7 @@ func (h handler) create(c *gin.Context) {
 		return
 	}
 	if !entitlement.Has(c.Request.Context(), h.db, owner, "premium", time.Now().UTC()) {
-		c.JSON(http.StatusForbidden, response.Resp{ErrorCode: 403, Message: "an active premium subscription is required to create a group"})
+		response.StatusError(c, http.StatusForbidden, 403, "an active premium subscription is required to create a group")
 		return
 	}
 	if h.slugTaken(c, req.Slug, primitive.NilObjectID) {
@@ -197,7 +197,7 @@ func (h handler) update(c *gin.Context) {
 		return
 	}
 	if req.Visibility == models.GroupVisibilityPrivate && !entitlement.Has(c.Request.Context(), h.db, g.OwnerID, "premium", time.Now().UTC()) {
-		c.JSON(http.StatusForbidden, response.Resp{ErrorCode: 403, Message: "an active premium subscription is required to make a group private"})
+		response.StatusError(c, http.StatusForbidden, 403, "an active premium subscription is required to make a group private")
 		return
 	}
 	g.Name, g.Slug, g.Description, g.AvatarURL, g.Visibility, g.JoinPolicy, g.UpdatedAt = req.Name, req.Slug, req.Description, req.AvatarURL, req.Visibility, req.JoinPolicy, time.Now().UTC()
@@ -275,7 +275,7 @@ func (h handler) leave(c *gin.Context) {
 	}
 	var m models.GroupMembership
 	if err := h.db.Collection(membershipsCollection).FindOne(c.Request.Context(), bson.M{"group_id": g.ID, "user_id": uid}).Decode(&m); err != nil {
-		c.JSON(http.StatusNotFound, response.Resp{ErrorCode: 404, Message: "membership not found"})
+		response.StatusError(c, http.StatusNotFound, 404, "membership not found")
 		return
 	}
 	if m.Role == models.GroupRoleOwner {
@@ -417,7 +417,7 @@ func (h handler) removePost(c *gin.Context) {
 	}
 	var p models.Post
 	if err := h.db.Collection("posts").FindOne(c.Request.Context(), bson.M{"_id": postID, "group_id": g.ID, "deleted_at": bson.M{"$exists": false}}).Decode(&p); err != nil {
-		c.JSON(http.StatusNotFound, response.Resp{ErrorCode: 404, Message: "group post not found"})
+		response.StatusError(c, http.StatusNotFound, 404, "group post not found")
 		return
 	}
 	uid, _ := userID(c)
@@ -453,7 +453,7 @@ func (h handler) updateMember(c *gin.Context) {
 	}
 	var target models.GroupMembership
 	if err := h.db.Collection(membershipsCollection).FindOne(c.Request.Context(), bson.M{"group_id": g.ID, "user_id": targetID}).Decode(&target); err != nil {
-		c.JSON(http.StatusNotFound, response.Resp{ErrorCode: 404, Message: "membership not found"})
+		response.StatusError(c, http.StatusNotFound, 404, "membership not found")
 		return
 	}
 	if target.Role == models.GroupRoleOwner {
@@ -505,7 +505,7 @@ func (h handler) group(c *gin.Context) (models.Group, bool) {
 	}
 	var g models.Group
 	if err := h.db.Collection(groupsCollection).FindOne(c.Request.Context(), bson.M{"_id": id, "deleted_at": bson.M{"$exists": false}}).Decode(&g); err != nil {
-		c.JSON(http.StatusNotFound, response.Resp{ErrorCode: 404, Message: "group not found"})
+		response.StatusError(c, http.StatusNotFound, 404, "group not found")
 		return models.Group{}, false
 	}
 	return g, true
@@ -553,5 +553,5 @@ func userID(c *gin.Context) (primitive.ObjectID, bool) {
 	return id, err == nil
 }
 func badRequest(c *gin.Context, message string) {
-	c.JSON(http.StatusBadRequest, response.Resp{ErrorCode: 400, Message: message})
+	response.StatusError(c, http.StatusBadRequest, 400, message)
 }

@@ -54,7 +54,7 @@ func (h handler) markRead(c *gin.Context) {
 	}
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, response.Resp{ErrorCode: 400, Message: "invalid notification id"})
+		response.StatusError(c, http.StatusBadRequest, 400, "invalid notification id")
 		return
 	}
 	now := time.Now().UTC()

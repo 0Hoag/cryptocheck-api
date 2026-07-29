@@ -67,7 +67,7 @@ func (h handler) create(c *gin.Context) {
 		col = "comments"
 	}
 	if err := h.db.Collection(col).FindOne(c.Request.Context(), bson.M{"_id": targetID, "deleted_at": bson.M{"$exists": false}}).Decode(&bson.M{}); err != nil {
-		c.JSON(http.StatusNotFound, response.Resp{ErrorCode: 404, Message: "reported content not found"})
+		response.StatusError(c, http.StatusNotFound, 404, "reported content not found")
 		return
 	}
 	now := time.Now().UTC()
@@ -136,7 +136,7 @@ func (h handler) moderate(c *gin.Context) {
 		return
 	}
 	if result.MatchedCount == 0 {
-		c.JSON(http.StatusNotFound, response.Resp{ErrorCode: 404, Message: "report not found"})
+		response.StatusError(c, http.StatusNotFound, 404, "report not found")
 		return
 	}
 	audit := models.ModerationAudit{ID: h.db.NewObjectID(), ReportID: id, ActorID: actor, Action: req.Status, Note: strings.TrimSpace(req.Note), CreatedAt: now}
@@ -167,5 +167,5 @@ func admin(c *gin.Context) bool {
 	return false
 }
 func bad(c *gin.Context, m string) {
-	c.JSON(http.StatusBadRequest, response.Resp{ErrorCode: 400, Message: m})
+	response.StatusError(c, http.StatusBadRequest, 400, m)
 }
