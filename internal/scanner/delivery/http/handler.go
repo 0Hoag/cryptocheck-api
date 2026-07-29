@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -84,7 +83,7 @@ func (h handler) withinQuota(c *gin.Context) bool {
 		return false
 	}
 	if !quota.Unlimited && quota.Used >= quota.Limit {
-		c.JSON(http.StatusTooManyRequests, response.Resp{ErrorCode: 429, Message: "daily scanner quota reached for " + quota.Plan + " plan", Data: quota})
+		response.StatusErrorWithData(c, 429, 429, "daily scanner quota reached for "+quota.Plan+" plan", quota)
 		return false
 	}
 	return true
@@ -144,7 +143,7 @@ func (h handler) History(c *gin.Context) {
 	if raw := strings.TrimSpace(c.Query("limit")); raw != "" {
 		parsed, parseErr := strconv.ParseInt(raw, 10, 64)
 		if parseErr != nil || parsed < 1 || parsed > 100 {
-			c.JSON(400, gin.H{"error_code": 400, "message": "limit must be between 1 and 100"})
+			response.StatusError(c, 400, 400, "limit must be between 1 and 100")
 			return
 		}
 		limit = parsed

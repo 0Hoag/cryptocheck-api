@@ -184,3 +184,13 @@ func ErrorWithData(c *gin.Context, err error, data any) {
 	status, resp := parseErrorWithData(err, c, data)
 	c.JSON(status, withRequestID(c, resp))
 }
+
+// StatusError returns a controlled HTTP error while preserving the shared API
+// envelope and request correlation ID.
+func StatusError(c *gin.Context, status, errorCode int, message string) {
+	c.JSON(status, withRequestID(c, Resp{ErrorCode: errorCode, Message: message}))
+}
+
+func StatusErrorWithData(c *gin.Context, status, errorCode int, message string, data any) {
+	c.JSON(status, withRequestID(c, Resp{ErrorCode: errorCode, Message: message, Data: data}))
+}

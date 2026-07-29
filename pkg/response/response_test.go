@@ -20,6 +20,7 @@ func TestResponsesIncludeRequestID(t *testing.T) {
 		{name: "success", respond: func(c *gin.Context) { OK(c, map[string]string{"status": "ok"}) }},
 		{name: "error", respond: func(c *gin.Context) { Error(c, errors.New("unexpected")) }},
 		{name: "unauthorized", respond: Unauthorized},
+		{name: "explicit status", respond: func(c *gin.Context) { StatusError(c, http.StatusTooManyRequests, 429, "slow down") }},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			writer := httptest.NewRecorder()

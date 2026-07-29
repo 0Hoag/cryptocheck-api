@@ -129,6 +129,7 @@ go test ./...
 - [x] Set release-mode logging, configurable trusted proxies and restrictive CORS origin allow-list (no wildcard credentials). (full API test suite passed)
 - [ ] Add request validation/error contract tests and structured observability.
 	- [x] Emit a safe `X-Request-ID` on every API response and include it in JSON success/error bodies, preserving only validated client-provided IDs for deployment tracing. (middleware tests + full Go suite passed)
+	- [x] Route Scanner quota and history-validation errors through the shared response envelope so quota `429` and invalid-history `400` responses also expose the request correlation ID. (response/scanner tests + full Go suite passed)
   - [x] Normalize Scanner token input server-side and reject whitespace-only requests before calling providers; add table-driven Pre-launch URL validation coverage for accepted HTTP(S) and rejected malformed/unsafe URLs. (Scanner + Prelaunch packages and full Go suite passed)
   - [x] Add Login request-contract coverage for phone-length/digit and password-length boundaries, including request-to-usecase mapping. (auth HTTP package and full Go suite passed)
 - [x] Add GitHub Actions CI for formatting, `go test ./...` and `govulncheck` on pushes/PRs to main. (local formatting and full test suite passed; remote run is triggered by this commit)
