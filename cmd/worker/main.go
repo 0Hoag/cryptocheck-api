@@ -31,6 +31,7 @@ import (
 )
 
 func main() {
+	const articleDelay = 5 * time.Second
 	// 0. Load .env
 	_ = godotenv.Load()
 
@@ -215,13 +216,16 @@ func main() {
 				}
 			}()
 
-			// Always sleep after each attempt (6 minutes to avoid spam)
-			time.Sleep(740 * time.Second)
+			// Keep a small delay between provider calls without turning a ten-item
+			// batch into a multi-hour job. Duplicate URLs are skipped before this.
+			time.Sleep(articleDelay)
 		}
 	}
 
 	// 6. Scheduler
-	c := cron.New()
+	// A crawl can include translation and external provider calls. Never overlap
+	// scheduled runs, otherwise concurrent jobs race to publish the same feed.
+	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
 	// Run every 30 minutes: "*/30 * * * *"
 	_, err = c.AddFunc("*/30 * * * *", job)
 	if err != nil {
