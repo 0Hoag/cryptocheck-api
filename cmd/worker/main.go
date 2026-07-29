@@ -226,14 +226,13 @@ func main() {
 	// A crawl can include translation and external provider calls. Never overlap
 	// scheduled runs, otherwise concurrent jobs race to publish the same feed.
 	c := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)))
-	// Run every 30 minutes: "*/30 * * * *"
-	_, err = c.AddFunc("*/30 * * * *", job)
+	_, err = c.AddFunc(cfg.Crawler.Schedule, job)
 	if err != nil {
-		l.Fatalf(context.Background(), "Error adding cron job: %v", err)
+		l.Fatalf(context.Background(), "Worker: invalid CRAWLER_SCHEDULE %q: %v", cfg.Crawler.Schedule, err)
 	}
 
 	c.Start()
-	l.Info(context.Background(), "Worker started. Press Ctrl+C to stop.")
+	l.Infof(context.Background(), "Worker started with crawl schedule %q. Press Ctrl+C to stop.", cfg.Crawler.Schedule)
 
 	// Update: Run once immediately for testing
 	go job()

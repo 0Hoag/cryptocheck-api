@@ -30,6 +30,8 @@ POLYGONSCAN_API_KEY=your_polygon_key
 TELEGRAM_BOT_TOKEN=your_bot_token
 TELEGRAM_CHAT_ID=your_chat_id
 BOT_USER_ID=your_user_id
+# Optional: five-field cron schedule; default is every 15 minutes.
+CRAWLER_SCHEDULE=*/15 * * * *
 ```
 
 ## 2. Build and Run
@@ -46,7 +48,8 @@ docker-compose -f deployment/docker-compose.yml up -d --build
 ## 3. Verify Deployment
 
 - **Frontend**: [http://localhost:3000](http://localhost:3000)
-- **Backend API**: [http://localhost:8080/health](http://localhost:8080/health) (or similar endpoint)
+- **Backend API liveness**: [http://localhost:8080/healthz](http://localhost:8080/healthz)
+- **Backend API readiness (includes MongoDB ping)**: [http://localhost:8080/readyz](http://localhost:8080/readyz)
 - **RabbitMQ UI**: [http://localhost:15672](http://localhost:15672) (User: `user`, Pass: `password`)
 
 ## 4. Stopping

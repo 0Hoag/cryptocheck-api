@@ -15,6 +15,13 @@ type Config struct {
 	Gemini       GeminiConfig
 	Telegram     TelegramConfig
 	Scanner      ScannerConfig
+	Crawler      CrawlerConfig
+}
+
+type CrawlerConfig struct {
+	// Schedule uses the standard five-field cron format. Fifteen minutes keeps
+	// the news feed current without overlapping translation/provider jobs.
+	Schedule string `env:"CRAWLER_SCHEDULE" envDefault:"*/15 * * * *"`
 }
 
 type ScannerConfig struct {
