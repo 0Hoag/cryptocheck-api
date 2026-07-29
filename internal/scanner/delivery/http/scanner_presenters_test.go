@@ -1,6 +1,11 @@
 package http
 
-import "testing"
+import (
+	"testing"
+	"time"
+
+	"github.com/0Hoag/cryptocheck-api/internal/scanner"
+)
 
 func TestScannerTokenInputValidationAndNormalization(t *testing.T) {
 	if (scannerTokenInput{Token: "   "}).validate() == nil {
@@ -15,5 +20,13 @@ func TestScannerTokenInputValidationAndNormalization(t *testing.T) {
 	localized := (scannerTokenInput{Token: "BTC", Language: "vi"}).ToScanTokenInput()
 	if localized.Language != "vi" {
 		t.Fatalf("explicit language was lost: %+v", localized)
+	}
+}
+
+func TestScannerOutputCarriesAnalysisTimestamp(t *testing.T) {
+	analyzedAt := time.Date(2026, time.July, 29, 9, 0, 0, 0, time.FixedZone("UTC+7", 7*60*60))
+	output := (handler{}).ToScanTokenOutput(scanner.ScanTokenOutput{Name: "ENA"}, analyzedAt)
+	if !output.AnalyzedAt.Equal(analyzedAt.UTC()) {
+		t.Fatalf("analysis timestamp = %v, want %v", output.AnalyzedAt, analyzedAt.UTC())
 	}
 }

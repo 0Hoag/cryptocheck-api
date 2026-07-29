@@ -64,7 +64,7 @@ func (h handler) ScanToken(c *gin.Context) {
 	}
 	h.recordHistory(ctx, req.Token, token)
 
-	response.OK(c, h.ToScanTokenOutput(token))
+	response.OK(c, h.ToScanTokenOutput(token, time.Now().UTC()))
 }
 
 func (h handler) withinQuota(c *gin.Context) bool {

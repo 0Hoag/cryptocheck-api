@@ -33,6 +33,7 @@ curl -fsS http://localhost:8080/swagger/index.html >/dev/null
 - [x] Prevent native coins such as BNB/ETH/BTC from being treated as contracts in the client.
 - [x] ENA integration check: resolves Ethereum contract and returns a score.
 - [x] Add mocked DexScreener adapter tests for exact base/quote matching, deduplication, supported-chain mapping and provider errors.
+- [x] Include an explicit UTC `analyzed_at` timestamp in each scanner response so clients can show the freshness of the generated report instead of implying it is a permanent audit. (scanner HTTP tests + full Go suite passed)
 - [x] Add mocked Etherscan-compatible explorer adapter tests for source parsing, request parameters and provider error responses.
 - [x] Add a persisted scan history with owner, input, network, score, engine version and timestamps. (authenticated BTC scan/history smoke test passed; anonymous history request returns 401)
 - [ ] Define and enforce Free/Premium quotas and analysis depth server-side.
