@@ -123,5 +123,6 @@ go test ./...
 - [x] Set release-mode logging, configurable trusted proxies and restrictive CORS origin allow-list (no wildcard credentials). (full API test suite passed)
 - [ ] Add request validation/error contract tests and structured observability.
   - [x] Normalize Scanner token input server-side and reject whitespace-only requests before calling providers; add table-driven Pre-launch URL validation coverage for accepted HTTP(S) and rejected malformed/unsafe URLs. (Scanner + Prelaunch packages and full Go suite passed)
+  - [x] Add Login request-contract coverage for phone-length/digit and password-length boundaries, including request-to-usecase mapping. (auth HTTP package and full Go suite passed)
 - [x] Add GitHub Actions CI for formatting, `go test ./...` and `govulncheck` on pushes/PRs to main. (local formatting and full test suite passed; remote run is triggered by this commit)
 - [x] Document split-repository environment/deployment and rollback runbook without secrets. (deployment runbook reviewed; commands validate compose before recreate)
