@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"regexp"
 	"strings"
 
 	"github.com/0Hoag/cryptocheck-api/internal/adapters/dexscreener"
@@ -10,10 +11,27 @@ import (
 	scanDomain "github.com/0Hoag/cryptocheck-api/internal/scanner"
 )
 
+var solanaMintAddressPattern = regexp.MustCompile(`^[1-9A-HJ-NP-Za-km-z]{32,44}$`)
+
 func (uc ScannerUC) ScanToken(ctx context.Context, input scanDomain.ScanTokenInput) (scanDomain.ScanTokenOutput, error) {
 	query := strings.TrimSpace(input.Token)
 	if native, ok := nativeAssetReports[strings.ToUpper(query)]; ok {
 		return native.toOutput(), nil
+	}
+	// A Solana mint is a base58 address rather than an EVM-style 0x address.
+	// Resolve it on-chain first so a valid mint is not mistakenly searched as a
+	// ticker symbol on DexScreener.
+	if isSolanaMintAddress(query) {
+		report, err := uc.scanSolanaMint(ctx, dexscreener.Asset{
+			Address: query,
+			Network: "solana",
+			Name:    "Solana SPL mint",
+		}, input.Language)
+		if err != nil {
+			uc.l.Errorf(ctx, "scanner.usecase.scanner.ScanToken: direct solana mint lookup failed: %v", err)
+			return scanDomain.ScanTokenOutput{}, scanDomain.ErrSolanaMintUnavailable
+		}
+		return report, nil
 	}
 	address := query
 	network := "eth"
@@ -85,6 +103,10 @@ func (uc ScannerUC) ScanToken(ctx context.Context, input scanDomain.ScanTokenInp
 		Issues:          result.Issues,
 		SafeFeatures:    result.SafeFeatures,
 	}, nil
+}
+
+func isSolanaMintAddress(value string) bool {
+	return solanaMintAddressPattern.MatchString(value)
 }
 
 func (uc ScannerUC) FindCandidates(ctx context.Context, input scanDomain.FindCandidatesInput) ([]scanDomain.TokenCandidate, error) {

@@ -6,9 +6,11 @@ import (
 )
 
 var (
-	errWrongBody          = pkgErrors.NewHTTPError(140003, "Wrong body")
-	errTokenNotFound      = pkgErrors.NewHTTPError(140404, "Token not found on DexScreener. Please check the token symbol or address.")
-	errSourceCodeNotFound = pkgErrors.NewHTTPError(140405, "Source code not found on supported networks (ETH, BSC, BASE, ARBITRUM, POLYGON). This token may not be a smart contract or is on an unsupported network.")
+	errWrongBody             = pkgErrors.NewHTTPError(140003, "Wrong body")
+	errTokenNotFound         = pkgErrors.NewHTTPError(140404, "Token not found on DexScreener. Please check the token symbol or address.")
+	errSourceCodeNotFound    = pkgErrors.NewHTTPError(140405, "Source code not found on supported networks (ETH, BSC, BASE, ARBITRUM, POLYGON). This token may not be a smart contract or is on an unsupported network.")
+	errSolanaMintUnavailable = pkgErrors.NewHTTPError(140406, "This Solana address is not a verifiable SPL token mint right now. Check the address or try again shortly.")
+	errScannerUnavailable    = pkgErrors.NewHTTPError(140500, "Scanner is temporarily unavailable. Please try again shortly.")
 )
 
 func (h handler) mapError(err error) error {
@@ -17,7 +19,11 @@ func (h handler) mapError(err error) error {
 		return errTokenNotFound
 	case scanner.ErrSourceCodeNotFound:
 		return errSourceCodeNotFound
+	case scanner.ErrSolanaMintUnavailable:
+		return errSolanaMintUnavailable
 	default:
-		panic(err)
+		// Domain errors must never take down a request handler. Log the original
+		// error at its call site and return a stable, non-sensitive response.
+		return errScannerUnavailable
 	}
 }

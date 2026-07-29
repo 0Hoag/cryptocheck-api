@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"context"
+
 	"github.com/0Hoag/cryptocheck-api/internal/adapters/dexscreener"
 	"github.com/0Hoag/cryptocheck-api/internal/adapters/etherscan"
 	"github.com/0Hoag/cryptocheck-api/internal/adapters/solana"
@@ -13,7 +15,13 @@ type ScannerUC struct {
 	engine    *scanner.Engine
 	dexClient *dexscreener.Client
 	ethClient *etherscan.Client
-	solClient *solana.Client
+	solClient solanaMintClient
+}
+
+// solanaMintClient keeps the use case independent from the RPC transport and
+// lets direct mint-address scans be verified without a live Solana endpoint.
+type solanaMintClient interface {
+	GetMint(ctx context.Context, address string) (solana.Mint, error)
 }
 
 func New(l pkgLog.Logger, engine *scanner.Engine, dex *dexscreener.Client, eth *etherscan.Client) *ScannerUC {

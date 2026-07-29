@@ -44,7 +44,7 @@ curl -fsS http://localhost:8080/swagger/index.html >/dev/null
 - [x] Phase 2: expose the five strongest de-duplicated matches so the client can ask users to choose the chain when a symbol is ambiguous. (BONK candidates smoke test passed)
 - [x] Include DexScreener USD price with candidate matches so users can distinguish same-symbol assets by price, chain, liquidity and volume. (full API suite passed)
 - [x] Include DexScreener token image metadata with scanner candidates and market profiles for visual disambiguation. (full API suite passed)
-- [x] Add a first chain-specific Solana SPL mint analyzer (mint/freeze authority only); label it as limited on-chain analysis, not a full program audit. (BONK candidate smoke test passed)
+- [x] Add a first chain-specific Solana SPL mint analyzer (mint/freeze authority only); label it as limited on-chain analysis, not a full program audit. It accepts both DexScreener-resolved assets and direct base58 mint addresses without treating the latter as ticker symbols. (unit tests + full API suite passed)
 - [ ] Add chain-specific analyzers for other high-volume non-EVM chains before claiming source-code coverage.
 - [x] Add market metadata (DEX pair URL, liquidity, 24h volume, pair creation time, source/provider) and a market-data confidence level to every market-only result. (ENA smoke test passed)
 - [x] Add a prelaunch/watchlist record for projects without a deployed contract: public list/detail plus authenticated create and owner-only update/delete; record project URL, official socials, claimed chain, launch date, verification evidence and risk flags. (prelaunch and HTTP server packages passed)
