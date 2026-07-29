@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"context"
+	"sort"
 	"sync"
 	"time"
 
@@ -53,5 +54,29 @@ func (m *Manager) Run(ctx context.Context) ([]Article, error) {
 	}
 
 	wg.Wait()
-	return allArticles, nil
+	return normalizeArticles(allArticles), nil
+}
+
+// normalizeArticles makes concurrent crawler output deterministic before the
+// worker chooses a batch. Newest articles win and an article URL is published
+// at most once even if multiple sources surface the same link.
+func normalizeArticles(articles []Article) []Article {
+	unique := make(map[string]struct{}, len(articles))
+	result := make([]Article, 0, len(articles))
+	for _, article := range articles {
+		if article.SourceURL != "" {
+			if _, seen := unique[article.SourceURL]; seen {
+				continue
+			}
+			unique[article.SourceURL] = struct{}{}
+		}
+		result = append(result, article)
+	}
+	sort.SliceStable(result, func(i, j int) bool {
+		if result[i].PublishedAt.Equal(result[j].PublishedAt) {
+			return result[i].SourceURL < result[j].SourceURL
+		}
+		return result[i].PublishedAt.After(result[j].PublishedAt)
+	})
+	return result
 }
