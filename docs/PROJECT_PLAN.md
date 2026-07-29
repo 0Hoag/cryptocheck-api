@@ -78,7 +78,8 @@ curl -fsS 'http://localhost:8080/api/v1/news-feed/scanner?token=ENA&lang=vi'
 - [x] Return aggregate reaction/comment counts with feed posts to remove client N+1 calls (integration tested).
 - [x] Return sanitized author summaries with feed posts (integration tested; no phone exposure).
 - [x] Enforce public and private (`justme`) post visibility for guest, owner and other members (integration tested).
-- [ ] Add followers-only and group-only post visibility with authorization tests.
+- [x] Add followers-only and group-only post visibility with authorization tests.
+  - [x] Standard posts now support `followers`: guests see only public posts, post authors retain access, and only accounts following the author can read follower-only posts. The post response exposes its permission for clients. (post repository/presenter tests + full Go suite passed)
 - [ ] Add pagination, sorting and rate limits appropriate for a public community.
 
 Pass checks:

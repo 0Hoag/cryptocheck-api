@@ -34,6 +34,7 @@ type Post struct {
 type PrivacyType string
 
 const (
-	PrivacyTypePublic  PrivacyType = "public"
-	PrivacyTypePrivate PrivacyType = "justme"
+	PrivacyTypePublic    PrivacyType = "public"
+	PrivacyTypePrivate   PrivacyType = "justme"
+	PrivacyTypeFollowers PrivacyType = "followers"
 )

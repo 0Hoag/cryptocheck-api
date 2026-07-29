@@ -51,7 +51,7 @@ func (r createReq) validate() error {
 	}
 
 	switch r.Permission {
-	case string(models.PrivacyTypePrivate), string(models.PrivacyTypePublic):
+	case string(models.PrivacyTypePrivate), string(models.PrivacyTypePublic), string(models.PrivacyTypeFollowers):
 		break
 	default:
 		return errWrongBody
@@ -156,7 +156,7 @@ func (r updateReq) validate() error {
 	}
 
 	switch r.Permission {
-	case string(models.PrivacyTypePrivate), string(models.PrivacyTypePublic):
+	case string(models.PrivacyTypePrivate), string(models.PrivacyTypePublic), string(models.PrivacyTypeFollowers):
 		break
 	default:
 		return errWrongBody
@@ -174,6 +174,7 @@ func (h handler) newPostDataResp(p models.Post) postDataResp {
 		FullContent:   p.FullContent,
 		FullContentEn: p.FullContentEn,
 		Pin:           p.Pin,
+		Permission:    string(p.Permission),
 		FileIDs:       util.ObjectIDsToHex(p.FileIDs),
 		TaggedTarget:  util.ObjectIDsToHex(p.TaggedTarget),
 		AuthorID:      p.AuthorID.Hex(),
@@ -206,6 +207,7 @@ type postDataResp struct {
 	FileIDs       []string       `json:"file_ids"`
 	TaggedTarget  []string       `json:"tagged_target"`
 	Pin           bool           `json:"pin"`
+	Permission    string         `json:"permission"`
 	AuthorID      string         `json:"author_id"`
 	SourceURL     string         `json:"source_url"`
 	CreatedAt     time.Time      `json:"created_at"`

@@ -10,6 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+const followCollection = "follow"
+
 func (repo impleRepository) buildDetailQuery(ctx context.Context, sc models.Scope, id string) (bson.M, error) {
 	filter := bson.M{}
 
@@ -22,7 +24,7 @@ func (repo impleRepository) buildDetailQuery(ctx context.Context, sc models.Scop
 	}
 
 	filter["_id"] = objectID
-	if err := applyPostVisibility(filter, sc); err != nil {
+	if err := repo.applyPostVisibility(ctx, filter, sc); err != nil {
 		return bson.M{}, err
 	}
 
@@ -66,7 +68,7 @@ func (repo impleRepository) buildListQuery(ctx context.Context, sc models.Scope,
 	}
 
 	filter["pin"] = opts.Pin
-	if err := applyPostVisibility(filter, sc); err != nil {
+	if err := repo.applyPostVisibility(ctx, filter, sc); err != nil {
 		return bson.M{}, err
 	}
 
@@ -110,14 +112,14 @@ func (repo impleRepository) buildGetQuery(ctx context.Context, sc models.Scope, 
 	}
 
 	filter["pin"] = opts.Pin
-	if err := applyPostVisibility(filter, sc); err != nil {
+	if err := repo.applyPostVisibility(ctx, filter, sc); err != nil {
 		return bson.M{}, err
 	}
 
 	return filter, nil
 }
 
-func applyPostVisibility(filter bson.M, sc models.Scope) error {
+func (repo impleRepository) applyPostVisibility(ctx context.Context, filter bson.M, sc models.Scope) error {
 	publicFilter := bson.M{"permission": bson.M{"$in": bson.A{models.PrivacyTypePublic, ""}}}
 	if sc.UserID == "" {
 		for key, value := range publicFilter {
@@ -130,8 +132,45 @@ func applyPostVisibility(filter bson.M, sc models.Scope) error {
 	if err != nil {
 		return err
 	}
-	filter["$or"] = bson.A{publicFilter, bson.M{"author_id": authorID}}
+
+	followeeIDs, err := repo.followeeIDs(ctx, authorID)
+	if err != nil {
+		return err
+	}
+
+	filter["$or"] = visiblePostFilters(publicFilter, authorID, followeeIDs)
 	return nil
+}
+
+func visiblePostFilters(publicFilter bson.M, viewerID primitive.ObjectID, followeeIDs []primitive.ObjectID) bson.A {
+	visibleFilters := bson.A{publicFilter, bson.M{"author_id": viewerID}}
+	if len(followeeIDs) > 0 {
+		visibleFilters = append(visibleFilters, bson.M{
+			"permission": models.PrivacyTypeFollowers,
+			"author_id":  bson.M{"$in": followeeIDs},
+		})
+	}
+	return visibleFilters
+}
+
+func (repo impleRepository) followeeIDs(ctx context.Context, followerID primitive.ObjectID) ([]primitive.ObjectID, error) {
+	filter := mongo.BuildQueryWithSoftDelete(bson.M{"author_id": followerID})
+	cur, err := repo.db.Collection(followCollection).Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	var follows []models.Follow
+	if err := cur.All(ctx, &follows); err != nil {
+		return nil, err
+	}
+
+	followeeIDs := make([]primitive.ObjectID, 0, len(follows))
+	for _, follow := range follows {
+		followeeIDs = append(followeeIDs, follow.FolloweeID)
+	}
+	return followeeIDs, nil
 }
 
 func (repo impleRepository) buildGetOneQuery(ctx context.Context, sc models.Scope, opts repository.GetOneOptions) (bson.M, error) {
