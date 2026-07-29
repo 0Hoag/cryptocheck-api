@@ -5,6 +5,7 @@ import "math"
 const (
 	defaultPage  = 1
 	defaultLimit = 15
+	maxLimit     = 100
 )
 
 // PaginatorQuery is a struct that contains the page and limit of a request.
@@ -22,6 +23,9 @@ func (p *PaginatorQuery) Adjust() {
 
 	if p.Limit < 1 {
 		p.Limit = defaultLimit
+	}
+	if p.Limit > maxLimit {
+		p.Limit = maxLimit
 	}
 }
 

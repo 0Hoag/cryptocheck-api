@@ -81,6 +81,7 @@ curl -fsS 'http://localhost:8080/api/v1/news-feed/scanner?token=ENA&lang=vi'
 - [x] Add followers-only and group-only post visibility with authorization tests.
   - [x] Standard posts now support `followers`: guests see only public posts, post authors retain access, and only accounts following the author can read follower-only posts. The post response exposes its permission for clients. (post repository/presenter tests + full Go suite passed)
 - [ ] Add pagination, sorting and rate limits appropriate for a public community.
+  - [x] Cap all page-based API reads at 100 records per request while retaining the existing newest-first post sort. (paginator unit test + full Go suite passed)
 
 Pass checks:
 
