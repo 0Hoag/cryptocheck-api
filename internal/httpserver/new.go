@@ -1,6 +1,10 @@
 package httpserver
 
 import (
+	"context"
+	"net/http"
+	"time"
+
 	"github.com/0Hoag/cryptocheck-api/internal/adapters/dexscreener"
 	"github.com/0Hoag/cryptocheck-api/internal/adapters/etherscan"
 	"github.com/0Hoag/cryptocheck-api/internal/core/scanner"
@@ -107,6 +111,7 @@ func New(l pkgLog.Logger, cfg Config) *HTTPServer {
 
 		c.Next()
 	})
+	mapHealthRoutes(engine, cfg.DB)
 
 	return &HTTPServer{
 		l:            l,
@@ -126,6 +131,28 @@ func New(l pkgLog.Logger, cfg Config) *HTTPServer {
 		dexClient:  cfg.DexClient,
 		ethClient:  cfg.EthClient,
 	}
+}
+
+// mapHealthRoutes exposes dependency-free liveness and Mongo-backed readiness
+// probes. They remain outside /api/v1 so an orchestrator can use them before
+// application routes, authentication and optional RabbitMQ are initialized.
+func mapHealthRoutes(engine *gin.Engine, db pkgMongo.Database) {
+	engine.GET("/healthz", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+	engine.GET("/readyz", func(c *gin.Context) {
+		if db == nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"status": "unavailable", "dependency": "mongodb"})
+			return
+		}
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
+		defer cancel()
+		if err := db.Client().Ping(ctx); err != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"status": "unavailable", "dependency": "mongodb"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"status": "ready"})
+	})
 }
 
 func isProductionMode(mode string) bool {
