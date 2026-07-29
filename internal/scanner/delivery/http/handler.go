@@ -106,6 +106,7 @@ func (h handler) quotaForOwner(ctx context.Context, ownerID primitive.ObjectID, 
 // successful scans used today. The client uses this response as the source of
 // truth for Free/Premium labels instead of hard-coding an allowance.
 func (h handler) Quota(c *gin.Context) {
+	c.Header("Cache-Control", "no-store")
 	ctx := c.Request.Context()
 	scope, ok := jwt.GetScopeFromContext(ctx)
 	if !ok || scope.UserID == "" {
@@ -128,6 +129,7 @@ func (h handler) Quota(c *gin.Context) {
 
 // History returns only the current user's successful scan records.
 func (h handler) History(c *gin.Context) {
+	c.Header("Cache-Control", "no-store")
 	ctx := c.Request.Context()
 	scope, ok := jwt.GetScopeFromContext(ctx)
 	if !ok || scope.UserID == "" {
