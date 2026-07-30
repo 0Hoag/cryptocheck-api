@@ -103,6 +103,7 @@ go test ./internal/post/... ./internal/comment/...
 - [x] Clean crawler RSS HTML and prefer article-body excerpts for news posts; cover images remain separate and posts clearly attribute/link to the original article. (processor tests + worker smoke test)
 - [x] Add `groups` domain: group, membership, role (owner/admin/mod/member), join policy and visibility. Public/private visibility, open/approval/invite joins, owner leave protection, owner/admin member-role management, and unique MongoDB indexes are covered by handler validation tests and the full Go suite.
   - [x] Keep the active-group slug partial unique index compatible with MongoDB 6 by using `deleted_at: nil` equality rather than the unsupported `$exists: false` expression; absent `deleted_at` values remain indexed and soft-deleted timestamps are excluded. (group handler test + full Go suite passed)
+  - [x] Keep empty group, group-member and group-post feeds as JSON `[]` rather than `null`, preserving the collection contract across the directory and detail routes. (full Go suite passed)
 - [x] Add group post feed and moderation controls. Active members can publish and read group posts; private feeds require membership; post authors or owner/admin/moderator roles can remove group posts. (group handler tests + full Go suite passed)
 - [x] Add authenticated follow/unfollow and author-filtered profile feed endpoints (integration tested).
 - [x] Add a public aggregate follower/following counts endpoint without exposing individual follow relationships. (HTTP handler test passed)

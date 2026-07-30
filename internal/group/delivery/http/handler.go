@@ -155,7 +155,7 @@ func (h handler) list(c *gin.Context) {
 		return
 	}
 	defer cur.Close(c.Request.Context())
-	var groups []models.Group
+	groups := make([]models.Group, 0)
 	if err := cur.All(c.Request.Context(), &groups); err != nil {
 		response.Error(c, err)
 		return
@@ -312,7 +312,7 @@ func (h handler) members(c *gin.Context) {
 		return
 	}
 	defer cur.Close(c.Request.Context())
-	var members []models.GroupMembership
+	members := make([]models.GroupMembership, 0)
 	if err := cur.All(c.Request.Context(), &members); err != nil {
 		response.Error(c, err)
 		return
@@ -363,7 +363,7 @@ func (h handler) posts(c *gin.Context) {
 		return
 	}
 	defer cur.Close(c.Request.Context())
-	var posts []models.Post
+	posts := make([]models.Post, 0)
 	if err := cur.All(c.Request.Context(), &posts); err != nil {
 		response.Error(c, err)
 		return
