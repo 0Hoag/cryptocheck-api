@@ -35,6 +35,14 @@ func TestMemberRoleAndStatusContract(t *testing.T) {
 	}
 }
 
+func TestActiveGroupIndexFilterIsMongoSixCompatible(t *testing.T) {
+	filter := activeGroupIndexFilter()
+	deletedAt, ok := filter["deleted_at"]
+	if !ok || deletedAt != nil {
+		t.Fatalf("active group index filter = %#v, want deleted_at equality to nil", filter)
+	}
+}
+
 func TestModeratorPermissions(t *testing.T) {
 	if !canModerate(models.GroupRoleOwner) || !canModerate(models.GroupRoleAdmin) || !canModerate(models.GroupRoleModerator) {
 		t.Fatal("owner, admin and moderator must be able to moderate group posts")

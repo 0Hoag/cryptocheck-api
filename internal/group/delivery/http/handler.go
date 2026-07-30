@@ -28,10 +28,17 @@ const (
 
 type handler struct{ db pkgMongo.Database }
 
+// activeGroupIndexFilter deliberately uses equality-to-null instead of
+// `$exists: false`: MongoDB 6 permits equality in a partial index but rejects
+// the latter expression. Equality-to-null covers documents where the
+// omitempty deleted_at field is absent, while excluding soft-deleted timestamps.
+func activeGroupIndexFilter() bson.M {
+	return bson.M{"deleted_at": nil}
+}
+
 // EnsureIndexes protects the domain invariants even when requests arrive concurrently.
 func EnsureIndexes(ctx context.Context, db pkgMongo.Database) error {
-	activeGroup := bson.M{"deleted_at": bson.M{"$exists": false}}
-	if _, err := db.Collection(groupsCollection).CreateIndex(ctx, bson.D{{Key: "slug", Value: 1}}, options.Index().SetName("unique_active_group_slug").SetUnique(true).SetPartialFilterExpression(activeGroup)); err != nil {
+	if _, err := db.Collection(groupsCollection).CreateIndex(ctx, bson.D{{Key: "slug", Value: 1}}, options.Index().SetName("unique_active_group_slug").SetUnique(true).SetPartialFilterExpression(activeGroupIndexFilter())); err != nil {
 		return err
 	}
 	if _, err := db.Collection(membershipsCollection).CreateIndex(ctx, bson.D{{Key: "group_id", Value: 1}, {Key: "user_id", Value: 1}}, options.Index().SetName("unique_group_member").SetUnique(true)); err != nil {
