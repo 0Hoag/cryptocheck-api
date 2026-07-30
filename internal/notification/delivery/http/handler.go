@@ -38,7 +38,9 @@ func (h handler) list(c *gin.Context) {
 		return
 	}
 	defer cur.Close(c.Request.Context())
-	var items []models.UserNotification
+	// A nil slice becomes JSON null. Clients consume this endpoint as a list,
+	// so preserve the list contract even before the account has notifications.
+	items := make([]models.UserNotification, 0)
 	if err := cur.All(c.Request.Context(), &items); err != nil {
 		response.Error(c, err)
 		return
