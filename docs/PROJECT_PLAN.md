@@ -144,6 +144,7 @@ go test ./...
 - [ ] Add request validation/error contract tests and structured observability.
 	- [x] Bound HTTP header/body/idle connections and keep a 60-second response budget for scanner provider calls, preventing slow clients from holding API connections indefinitely. (HTTP-server timeout unit test + full Go suite passed)
 	- [x] Handle Docker/EC2 termination signals with a 10-second graceful HTTP shutdown, so deploy recreates stop accepting new traffic while in-flight API responses can finish instead of being cut off. (HTTP-server unit test + full Go suite passed)
+	- [x] Configure Docker API health checks against `/readyz` and a 15-second stop grace period, aligning container lifecycle with the API’s graceful-drain budget. (compose config validation passed)
 	- [x] Expose dependency-free `/healthz` and Mongo-backed `/readyz` probes so deployment monitoring distinguishes a live API process from a database-ready service. (HTTP-server tests + full Go suite passed)
 	- [x] Emit one safe request-completion log with method, route, status, latency and `request_id`, so support can correlate a reported ID without recording bodies, query parameters or credentials. (middleware tests + full Go suite passed)
 	- [x] Emit a safe `X-Request-ID` on every API response and include it in JSON success/error bodies, preserving only validated client-provided IDs for deployment tracing. (middleware tests + full Go suite passed)
