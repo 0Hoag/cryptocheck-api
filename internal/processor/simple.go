@@ -42,23 +42,32 @@ func articleExcerpt(content, fallback string) string {
 	return strings.TrimSpace(cut) + "…"
 }
 
+// translatedOrFallback keeps automated publishing available when the free
+// translation endpoint is temporarily unavailable. The source link and the
+// original-language fields are still retained for provenance.
+func translatedOrFallback(translated, fallback string, err error) (string, bool) {
+	if err != nil || strings.TrimSpace(translated) == "" {
+		return fallback, false
+	}
+	return translated, true
+}
+
 func NewSimpleProcessor(l log.Logger) *SimpleProcessor {
 	return &SimpleProcessor{l: l}
 }
 
 func (p *SimpleProcessor) Process(ctx context.Context, article crawler.Article) (ProcessedContent, error) {
 	// 1. Translate Title
-	titleVi, err := gtranslate.TranslateWithParams(
+	titleTranslated, err := gtranslate.TranslateWithParams(
 		article.Title,
 		gtranslate.TranslationParams{
 			From: "en",
 			To:   "vi",
 		},
 	)
-	if err != nil {
-		p.l.Errorf(ctx, "Failed to translate title: %v", err)
-		p.l.Errorf(ctx, "processor.simple.Process.TranslateTitle: %v", err)
-		return ProcessedContent{}, err
+	titleVi, titleTranslatedOK := translatedOrFallback(titleTranslated, article.Title, err)
+	if !titleTranslatedOK {
+		p.l.Warnf(ctx, "processor.simple.Process.TranslateTitle failed; publishing original title: %v", err)
 	}
 
 	// Prefer an excerpt from the crawled article body. RSS descriptions often
@@ -71,16 +80,16 @@ func (p *SimpleProcessor) Process(ctx context.Context, article crawler.Article) 
 	}
 
 	// Translate summary
-	summaryVi, err := gtranslate.TranslateWithParams(
+	summaryTranslated, err := gtranslate.TranslateWithParams(
 		summary,
 		gtranslate.TranslationParams{
 			From: "en",
 			To:   "vi",
 		},
 	)
-	if err != nil {
-		p.l.Errorf(ctx, "processor.simple.Process.TranslateSummary: %v", err)
-		return ProcessedContent{}, err
+	summaryVi, summaryTranslatedOK := translatedOrFallback(summaryTranslated, summary, err)
+	if !summaryTranslatedOK {
+		p.l.Warnf(ctx, "processor.simple.Process.TranslateSummary failed; publishing original excerpt: %v", err)
 	}
 
 	return ProcessedContent{
