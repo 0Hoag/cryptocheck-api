@@ -2,8 +2,12 @@ package httpserver
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/0Hoag/cryptocheck-api/internal/seeder"
@@ -16,6 +20,7 @@ const (
 	// explorers, so the server write timeout must remain above that budget.
 	serverWriteTimeout = 60 * time.Second
 	serverIdleTimeout  = 60 * time.Second
+	serverShutdownWait = 10 * time.Second
 )
 
 func (srv HTTPServer) newHTTPServer() *http.Server {
@@ -27,6 +32,13 @@ func (srv HTTPServer) newHTTPServer() *http.Server {
 		WriteTimeout:      serverWriteTimeout,
 		IdleTimeout:       serverIdleTimeout,
 	}
+}
+
+func normalizeServerRunError(err error) error {
+	if errors.Is(err, http.ErrServerClosed) {
+		return nil
+	}
+	return err
 }
 
 func (srv HTTPServer) Run() error {
@@ -43,5 +55,24 @@ func (srv HTTPServer) Run() error {
 	}
 
 	srv.l.Infof(ctx, "Started server on :%d", srv.port)
-	return srv.newHTTPServer().ListenAndServe()
+	server := srv.newHTTPServer()
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- server.ListenAndServe()
+	}()
+
+	shutdownCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	select {
+	case err := <-errCh:
+		return normalizeServerRunError(err)
+	case <-shutdownCtx.Done():
+		srv.l.Infof(ctx, "Shutting down HTTP server gracefully")
+		ctx, cancel := context.WithTimeout(context.Background(), serverShutdownWait)
+		defer cancel()
+		if err := server.Shutdown(ctx); err != nil {
+			return fmt.Errorf("graceful HTTP shutdown: %w", err)
+		}
+		return nil
+	}
 }
