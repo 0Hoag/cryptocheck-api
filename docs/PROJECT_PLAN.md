@@ -144,7 +144,7 @@ go test ./...
 ## 5. Production hardening
 
 - [x] Set release-mode logging, configurable trusted proxies and restrictive CORS origin allow-list (no wildcard credentials). (full API test suite passed)
-- [ ] Add request validation/error contract tests and structured observability.
+- [x] Add request validation/error contract tests and structured observability. (full Go suite passed)
 	- [x] Bound HTTP header/body/idle connections and keep a 60-second response budget for scanner provider calls, preventing slow clients from holding API connections indefinitely. (HTTP-server timeout unit test + full Go suite passed)
 	- [x] Handle Docker/EC2 termination signals with a 10-second graceful HTTP shutdown, so deploy recreates stop accepting new traffic while in-flight API responses can finish instead of being cut off. (HTTP-server unit test + full Go suite passed)
 	- [x] Configure Docker API health checks against `/readyz` and a 15-second stop grace period, aligning container lifecycle with the API’s graceful-drain budget. (compose config validation passed)
