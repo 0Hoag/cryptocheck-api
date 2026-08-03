@@ -5,15 +5,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gocolly/colly/v2"
 	"github.com/0Hoag/cryptocheck-api/internal/crawler"
+	"github.com/gocolly/colly/v2"
 )
 
 type coiTelegraphCrawler struct {
-	c *colly.Collector
 }
 
 func NewCoinTelegraphCrawler() crawler.SiteCrawler {
+	return &coiTelegraphCrawler{}
+}
+
+// newCoinTelegraphCollector returns a fresh collector for one crawl. Colly
+// callbacks are registered on a collector instance, so sharing one across
+// scheduled runs made OnXML handlers accumulate indefinitely.
+func newCoinTelegraphCollector() *colly.Collector {
 	c := colly.NewCollector(
 		colly.UserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"),
 	)
@@ -24,9 +30,7 @@ func NewCoinTelegraphCrawler() crawler.SiteCrawler {
 		r.Headers.Set("Referer", "https://google.com")
 		r.Headers.Set("Upgrade-Insecure-Requests", "1")
 	})
-	return &coiTelegraphCrawler{
-		c: c,
-	}
+	return c
 }
 
 func (c *coiTelegraphCrawler) Name() string {
@@ -34,10 +38,15 @@ func (c *coiTelegraphCrawler) Name() string {
 }
 
 func (c *coiTelegraphCrawler) Crawl(ctx context.Context) ([]crawler.Article, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
+	collector := newCoinTelegraphCollector()
 	var articles []crawler.Article
 
 	// Use RSS Feed
-	c.c.OnXML("//item", func(e *colly.XMLElement) {
+	collector.OnXML("//item", func(e *colly.XMLElement) {
 		title := e.ChildText("title")
 		link := e.ChildText("link")
 		summary := e.ChildText("description") // Use description as summary
@@ -60,7 +69,7 @@ func (c *coiTelegraphCrawler) Crawl(ctx context.Context) ([]crawler.Article, err
 		}
 
 		// Visit article page to extract full content
-		detailCollector := c.c.Clone()
+		detailCollector := collector.Clone()
 		var fullContent strings.Builder
 
 		detailCollector.OnHTML(".post-content p, .article__content p, .ct-prose p", func(e *colly.HTMLElement) {
@@ -90,11 +99,11 @@ func (c *coiTelegraphCrawler) Crawl(ctx context.Context) ([]crawler.Article, err
 		}
 	})
 
-	err := c.c.Visit("https://cointelegraph.com/rss")
+	err := collector.Visit("https://cointelegraph.com/rss")
 	if err != nil {
 		return nil, crawler.ErrCrawlFailed
 	}
 
-	c.c.Wait()
+	collector.Wait()
 	return articles, nil
 }
