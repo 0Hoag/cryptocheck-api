@@ -206,10 +206,13 @@ func crawlerPostIDsBeyondRetention(posts []models.Post, keep int) []primitive.Ob
 // PruneCrawlerPosts keeps the newest crawl-generated posts for one dedicated
 // bot author. It intentionally uses soft deletion and a non-empty source URL
 // so community/group posts are never included in crawler retention.
-func (repo impleRepository) PruneCrawlerPosts(ctx context.Context, authorID string, keep int) (int64, error) {
+func (repo *impleRepository) PruneCrawlerPosts(ctx context.Context, authorID string, keep int) (int64, error) {
 	ownerID, err := primitive.ObjectIDFromHex(authorID)
 	if err != nil {
 		return 0, fmt.Errorf("invalid crawler author id: %w", err)
+	}
+	if err := repo.ensureCrawlerRetentionIndex(ctx); err != nil {
+		return 0, fmt.Errorf("ensure crawler retention index: %w", err)
 	}
 
 	filter := mongo.BuildQueryWithSoftDelete(bson.M{
