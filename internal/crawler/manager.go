@@ -2,6 +2,7 @@ package crawler
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"sync"
 	"time"
@@ -30,6 +31,7 @@ func (m *Manager) Run(ctx context.Context) ([]Article, error) {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var allArticles []Article
+	var successfulCrawlers int
 
 	for _, c := range m.crawlers {
 		wg.Add(1)
@@ -48,12 +50,16 @@ func (m *Manager) Run(ctx context.Context) ([]Article, error) {
 			m.l.Infof(ctx, "Crawler %s fetched %d articles", crawler.Name(), len(articles))
 
 			mu.Lock()
+			successfulCrawlers++
 			allArticles = append(allArticles, articles...)
 			mu.Unlock()
 		}(c)
 	}
 
 	wg.Wait()
+	if len(m.crawlers) > 0 && successfulCrawlers == 0 {
+		return nil, fmt.Errorf("all %d registered crawlers failed", len(m.crawlers))
+	}
 	return normalizeArticles(allArticles), nil
 }
 
