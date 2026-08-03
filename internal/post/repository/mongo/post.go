@@ -85,8 +85,11 @@ func (repo impleRepository) List(ctx context.Context, sc models.Scope, opts repo
 	return ms, nil
 }
 
-func (repo impleRepository) Get(ctx context.Context, sc models.Scope, opts repository.GetOptions) ([]models.Post, paginator.Paginator, error) {
+func (repo *impleRepository) Get(ctx context.Context, sc models.Scope, opts repository.GetOptions) ([]models.Post, paginator.Paginator, error) {
 	col := repo.getPostCollection()
+	if err := repo.ensureFeedIndexes(ctx); err != nil {
+		return []models.Post{}, paginator.Paginator{}, fmt.Errorf("ensure post feed indexes: %w", err)
+	}
 
 	filter, err := repo.buildGetQuery(ctx, sc, opts)
 	if err != nil {

@@ -84,6 +84,7 @@ curl -fsS 'http://localhost:8080/api/v1/news-feed/scanner?token=ENA&lang=vi'
   - [x] Standard posts now support `followers`: guests see only public posts, post authors retain access, and only accounts following the author can read follower-only posts. The post response exposes its permission for clients. (post repository/presenter tests + full Go suite passed)
 - [ ] Add pagination, sorting and rate limits appropriate for a public community.
   - [x] Cap all page-based API reads at 100 records per request while retaining the existing newest-first post sort. (paginator unit test + full Go suite passed)
+	- [x] Add lazy compound MongoDB indexes for newest-first public feeds and author-profile feeds, preventing page/skip queries from scanning the growing post collection. (full Go suite passed)
   - [x] Rate-limit authenticated post, reaction, comment, follow and group writes to 30 requests/minute per account with a `429`/`Retry-After` response. (middleware unit test + full Go suite passed; process-local baseline, edge/distributed enforcement remains a release concern)
 
 Pass checks:

@@ -19,6 +19,8 @@ type impleRepository struct {
 	clock                     func() time.Time
 	reactionIndexOnce         sync.Once
 	reactionIndexErr          error
+	feedIndexOnce             sync.Once
+	feedIndexErr              error
 	crawlerRetentionIndexOnce sync.Once
 	crawlerRetentionIndexErr  error
 }
@@ -31,6 +33,26 @@ func (repo *impleRepository) ensureReactionIndex(ctx context.Context) error {
 		)
 	})
 	return repo.reactionIndexErr
+}
+
+// ensureFeedIndexes supports the two most frequent paginated post views:
+// newest-first public feed and newest-first posts by one author. Indexes are
+// created lazily and idempotently by MongoDB, avoiding startup migrations.
+func (repo *impleRepository) ensureFeedIndexes(ctx context.Context) error {
+	repo.feedIndexOnce.Do(func() {
+		collection := repo.getPostCollection()
+		if _, repo.feedIndexErr = collection.CreateIndex(ctx,
+			bson.D{{Key: "pin", Value: 1}, {Key: "created_at", Value: -1}},
+			options.Index().SetName("post_feed_pin_created_at"),
+		); repo.feedIndexErr != nil {
+			return
+		}
+		_, repo.feedIndexErr = collection.CreateIndex(ctx,
+			bson.D{{Key: "author_id", Value: 1}, {Key: "pin", Value: 1}, {Key: "created_at", Value: -1}},
+			options.Index().SetName("post_author_feed_pin_created_at"),
+		)
+	})
+	return repo.feedIndexErr
 }
 
 // ensureCrawlerRetentionIndex keeps the periodic crawler cleanup bounded as
