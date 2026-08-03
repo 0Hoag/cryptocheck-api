@@ -82,7 +82,7 @@ curl -fsS 'http://localhost:8080/api/v1/news-feed/scanner?token=ENA&lang=vi'
 - [x] Enforce public and private (`justme`) post visibility for guest, owner and other members (integration tested).
 - [x] Add followers-only and group-only post visibility with authorization tests.
   - [x] Standard posts now support `followers`: guests see only public posts, post authors retain access, and only accounts following the author can read follower-only posts. The post response exposes its permission for clients. (post repository/presenter tests + full Go suite passed)
-- [ ] Add pagination, sorting and rate limits appropriate for a public community.
+- [x] Add pagination, sorting and rate limits appropriate for a public community. (full Go suite passed)
   - [x] Cap all page-based API reads at 100 records per request while retaining the existing newest-first post sort. (paginator unit test + full Go suite passed)
 	- [x] Add lazy compound MongoDB indexes for newest-first public feeds and author-profile feeds, preventing page/skip queries from scanning the growing post collection. (full Go suite passed)
 	- [x] Decode Mongo list results through slice pointers and close every post/comment/reaction/follow/user read cursor, preventing empty list responses and leaked cursors. (post repository regression test + full Go suite passed)
