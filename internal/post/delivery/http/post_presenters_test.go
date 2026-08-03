@@ -34,9 +34,15 @@ func TestGetReqRejectsUnsupportedSort(t *testing.T) {
 	if err := (getReq{Sort: "popular"}).validate(); err == nil {
 		t.Fatal("unsupported sort must be rejected")
 	}
-	for _, sort := range []string{"", "newest", "oldest"} {
+	for _, sort := range []string{"", "newest", "oldest", "-created_at", "created_at"} {
 		if err := (getReq{Sort: sort}).validate(); err != nil {
 			t.Fatalf("sort %q error = %v", sort, err)
 		}
+	}
+	if got := (getReq{Sort: "-created_at"}).toFilter().Sort; got != "newest" {
+		t.Fatalf("legacy descending sort normalized to %q, want newest", got)
+	}
+	if got := (getReq{Sort: "created_at"}).toFilter().Sort; got != "oldest" {
+		t.Fatalf("legacy ascending sort normalized to %q, want oldest", got)
 	}
 }

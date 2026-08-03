@@ -87,7 +87,7 @@ func (r getReq) validate() error {
 			return errWrongQuery
 		}
 	}
-	if r.Sort != "" && r.Sort != "newest" && r.Sort != "oldest" {
+	if !isSupportedPostSort(r.Sort) {
 		return errWrongQuery
 	}
 
@@ -99,7 +99,7 @@ func (r getReq) toFilter() post.Filter {
 		ID:       r.ID,
 		IDs:      r.IDs,
 		AuthorID: r.AuthorID,
-		Sort:     r.Sort,
+		Sort:     normalizePostSort(r.Sort),
 	}
 
 	if r.Pin != nil {
@@ -107,6 +107,24 @@ func (r getReq) toFilter() post.Filter {
 	}
 
 	return filter
+}
+
+// isSupportedPostSort keeps legacy clients using created_at notation working
+// while new clients use the documented newest/oldest values.
+func isSupportedPostSort(sort string) bool {
+	switch sort {
+	case "", "newest", "oldest", "-created_at", "created_at":
+		return true
+	default:
+		return false
+	}
+}
+
+func normalizePostSort(sort string) string {
+	if sort == "created_at" {
+		return "oldest"
+	}
+	return "newest"
 }
 
 type updateReq struct {
