@@ -142,6 +142,7 @@ go test ./...
 
 - [x] Set release-mode logging, configurable trusted proxies and restrictive CORS origin allow-list (no wildcard credentials). (full API test suite passed)
 - [ ] Add request validation/error contract tests and structured observability.
+	- [x] Bound HTTP header/body/idle connections and keep a 60-second response budget for scanner provider calls, preventing slow clients from holding API connections indefinitely. (HTTP-server timeout unit test + full Go suite passed)
 	- [x] Expose dependency-free `/healthz` and Mongo-backed `/readyz` probes so deployment monitoring distinguishes a live API process from a database-ready service. (HTTP-server tests + full Go suite passed)
 	- [x] Emit one safe request-completion log with method, route, status, latency and `request_id`, so support can correlate a reported ID without recording bodies, query parameters or credentials. (middleware tests + full Go suite passed)
 	- [x] Emit a safe `X-Request-ID` on every API response and include it in JSON success/error bodies, preserving only validated client-provided IDs for deployment tracing. (middleware tests + full Go suite passed)
