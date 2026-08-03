@@ -12,6 +12,11 @@ import (
 type CoindeskCrawler struct {
 }
 
+// The worker publishes at most ten newest articles per run. Keeping a modest
+// source-level ceiling avoids opening every link on the CoinDesk homepage
+// before that publish cap is applied.
+const maxCoindeskArticles = 20
+
 func parsePublishedAt(value string, fallback time.Time) time.Time {
 	publishedAt, err := time.Parse(time.RFC3339, strings.TrimSpace(value))
 	if err != nil {
@@ -29,6 +34,10 @@ func (c *CoindeskCrawler) Name() string {
 }
 
 func (c *CoindeskCrawler) Crawl(ctx context.Context) ([]crawler.Article, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
 	var articles []crawler.Article
 
 	// Create collector by libary Colly
@@ -66,6 +75,9 @@ func (c *CoindeskCrawler) Crawl(ctx context.Context) ([]crawler.Article, error) 
 					return
 				}
 			}
+			if len(articles) >= maxCoindeskArticles || ctx.Err() != nil {
+				return
+			}
 
 			// Create detail collector to fetch image and full content
 			detailCollector := collector.Clone()
@@ -90,7 +102,9 @@ func (c *CoindeskCrawler) Crawl(ctx context.Context) ([]crawler.Article, error) 
 				}
 			})
 
-			detailCollector.Visit(link)
+			if err := detailCollector.Visit(link); err != nil {
+				return
+			}
 
 			now := time.Now().UTC()
 			articles = append(articles, crawler.Article{

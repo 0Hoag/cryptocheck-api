@@ -100,6 +100,7 @@ go test ./internal/post/... ./internal/comment/...
   - [x] Normalize concurrent crawler output before applying the publish cap: deduplicate source URLs and sort newest-first so a slow source cannot push current articles out of the batch. (crawler package + full Go suite passed)
 	- [x] Create a fresh CoinTelegraph Colly collector for every scheduled crawl so XML callbacks cannot accumulate across runs; cancelled jobs stop before a network request. (crawler sites package + full Go suite passed)
 	- [x] Report an explicit worker error when every registered crawler fails, while retaining posts from any healthy source. (crawler manager tests + full Go suite passed)
+	- [x] Cap CoinDesk detail-page fetches at 20 articles per run before the worker selects its newest ten, preventing unnecessary upstream requests; cancelled jobs stop before a network request. (crawler sites package + full Go suite passed)
 	- [x] Read CoinDesk article publish timestamps from `article:published_time` metadata with a safe crawl-time fallback, so cross-source newest-first ordering uses the real article time whenever available. (crawler sites package + full Go suite passed)
 	- [x] Make the worker crawl schedule configurable through `CRAWLER_SCHEDULE`, with a fifteen-minute default and fail-fast validation for invalid cron expressions. (worker package + full Go suite passed)
 - [x] Clean crawler RSS HTML and prefer article-body excerpts for news posts; cover images remain separate and posts clearly attribute/link to the original article. (processor tests + worker smoke test)

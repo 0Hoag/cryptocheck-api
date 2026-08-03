@@ -1,6 +1,8 @@
 package sites
 
 import (
+	"context"
+	"errors"
 	"testing"
 	"time"
 )
@@ -13,5 +15,18 @@ func TestParsePublishedAt(t *testing.T) {
 	}
 	if got := parsePublishedAt("not-a-date", fallback); !got.Equal(fallback) {
 		t.Fatalf("invalid date fallback = %s, want %s", got, fallback)
+	}
+}
+
+func TestCoindeskCrawlerHonorsCancelledContext(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	articles, err := NewCoindeskCrawler().Crawl(ctx)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("Crawl() error = %v, want context.Canceled", err)
+	}
+	if articles != nil {
+		t.Fatalf("Crawl() articles = %#v, want nil", articles)
 	}
 }
