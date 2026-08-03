@@ -37,7 +37,8 @@ curl -fsS http://localhost:8080/swagger/index.html >/dev/null
 - [x] Mark dynamic scanner reports and token candidates as `Cache-Control: no-store` so a browser or intermediary does not reuse a stale security/market response. (full Go suite passed)
 - [x] Add mocked Etherscan-compatible explorer adapter tests for source parsing, request parameters and provider error responses.
 - [x] Add a persisted scan history with owner, input, network, score, engine version and timestamps. (authenticated BTC scan/history smoke test passed; anonymous history request returns 401)
-- [ ] Define and enforce Free/Premium quotas and analysis depth server-side.
+- [x] Define and enforce server-side Free/Premium scanner quotas: Free receives two successful scans per UTC day; Premium is unlimited. (scanner quota/history tests + full Go suite passed)
+- [ ] Define a genuinely enhanced Premium analysis depth only after the additional data sources, scoring criteria and user-facing limitations are specified; do not label the current result as deeper analysis.
 
 ### 1.1 Multi-market and early-launch coverage
 
