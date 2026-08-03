@@ -78,6 +78,7 @@ func (repo impleRepository) ListReaction(ctx context.Context, sc models.Scope, o
 		repo.l.Errorf(ctx, "post.mongo.ListReaction.Find: %v", err)
 		return []models.Reaction{}, err
 	}
+	defer cur.Close(ctx)
 
 	var ms []models.Reaction
 	err = cur.All(ctx, &ms)
@@ -105,6 +106,7 @@ func (repo impleRepository) GetReaction(ctx context.Context, sc models.Scope, op
 		repo.l.Errorf(ctx, "post.mongo.GetReaction.Find: %v", err)
 		return []models.Reaction{}, paginator.Paginator{}, err
 	}
+	defer cur.Close(ctx)
 
 	var ms []models.Reaction
 	err = cur.All(ctx, &ms)

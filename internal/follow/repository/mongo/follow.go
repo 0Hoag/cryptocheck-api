@@ -71,6 +71,7 @@ func (repo impleRepository) List(ctx context.Context, sc models.Scope, opts repo
 		repo.l.Errorf(ctx, "follows.mongo.List.buildListQuery: %v", err)
 		return []models.Follow{}, err
 	}
+	defer cur.Close(ctx)
 
 	var ms []models.Follow
 	err = cur.All(ctx, &ms)
@@ -98,6 +99,7 @@ func (repo impleRepository) Get(ctx context.Context, sc models.Scope, opts repos
 		repo.l.Errorf(ctx, "follows.mongo.Get.Find: %v", err)
 		return []models.Follow{}, paginator.Paginator{}, err
 	}
+	defer cur.Close(ctx)
 
 	var ms []models.Follow
 	err = cur.All(ctx, &ms)

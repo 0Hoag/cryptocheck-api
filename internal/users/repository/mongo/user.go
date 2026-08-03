@@ -90,9 +90,10 @@ func (repo impleRepository) List(ctx context.Context, sc models.Scope, opts repo
 		repo.l.Errorf(ctx, "users.mongo.List.buildListQuery: %v", err)
 		return []models.User{}, err
 	}
+	defer cur.Close(ctx)
 
 	var ms []models.User
-	err = cur.All(ctx, ms)
+	err = cur.All(ctx, &ms)
 	if err != nil {
 		repo.l.Errorf(ctx, "users.mongo.List.All: %v", err)
 		return []models.User{}, err
@@ -117,6 +118,7 @@ func (repo impleRepository) Get(ctx context.Context, sc models.Scope, opts repos
 		repo.l.Errorf(ctx, "users.mongo.Get.Find: %v", err)
 		return []models.User{}, paginator.Paginator{}, err
 	}
+	defer cur.Close(ctx)
 
 	var ms []models.User
 	err = cur.All(ctx, &ms)

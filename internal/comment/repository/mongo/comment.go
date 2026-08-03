@@ -90,6 +90,7 @@ func (repo impleRepository) List(ctx context.Context, sc models.Scope, opts repo
 		repo.l.Errorf(ctx, "comments.mongo.List.buildListQuery: %v", err)
 		return []models.Comment{}, err
 	}
+	defer cur.Close(ctx)
 
 	var ms []models.Comment
 	err = cur.All(ctx, &ms)
@@ -117,6 +118,7 @@ func (repo impleRepository) Get(ctx context.Context, sc models.Scope, opts repos
 		repo.l.Errorf(ctx, "comments.mongo.Get.Find: %v", err)
 		return []models.Comment{}, paginator.Paginator{}, err
 	}
+	defer cur.Close(ctx)
 
 	var ms []models.Comment
 	err = cur.All(ctx, &ms)

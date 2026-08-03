@@ -74,9 +74,10 @@ func (repo impleRepository) List(ctx context.Context, sc models.Scope, opts repo
 		repo.l.Errorf(ctx, "post.mongo.List.buildListQuery: %v", err)
 		return []models.Post{}, err
 	}
+	defer cur.Close(ctx)
 
 	var ms []models.Post
-	err = cur.All(ctx, ms)
+	err = cur.All(ctx, &ms)
 	if err != nil {
 		repo.l.Errorf(ctx, "post.mongo.List.All: %v", err)
 		return []models.Post{}, err
@@ -105,6 +106,7 @@ func (repo *impleRepository) Get(ctx context.Context, sc models.Scope, opts repo
 		repo.l.Errorf(ctx, "post.mongo.Get.Find: %v", err)
 		return []models.Post{}, paginator.Paginator{}, err
 	}
+	defer cur.Close(ctx)
 
 	var ms []models.Post
 	err = cur.All(ctx, &ms)
