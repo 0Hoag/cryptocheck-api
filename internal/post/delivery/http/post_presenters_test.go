@@ -29,3 +29,14 @@ func TestPostResponseIncludesPermission(t *testing.T) {
 		t.Fatalf("expected followers permission, got %q", got)
 	}
 }
+
+func TestGetReqRejectsUnsupportedSort(t *testing.T) {
+	if err := (getReq{Sort: "popular"}).validate(); err == nil {
+		t.Fatal("unsupported sort must be rejected")
+	}
+	for _, sort := range []string{"", "newest", "oldest"} {
+		if err := (getReq{Sort: sort}).validate(); err != nil {
+			t.Fatalf("sort %q error = %v", sort, err)
+		}
+	}
+}

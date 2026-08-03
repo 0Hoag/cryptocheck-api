@@ -65,6 +65,7 @@ type getReq struct {
 	IDs      []string `form:"ids[]"`
 	AuthorID string   `form:"author_id"`
 	Pin      *bool    `form:"pin"`
+	Sort     string   `form:"sort"`
 }
 
 func (r getReq) validate() error {
@@ -86,6 +87,9 @@ func (r getReq) validate() error {
 			return errWrongQuery
 		}
 	}
+	if r.Sort != "" && r.Sort != "newest" && r.Sort != "oldest" {
+		return errWrongQuery
+	}
 
 	return nil
 }
@@ -95,6 +99,7 @@ func (r getReq) toFilter() post.Filter {
 		ID:       r.ID,
 		IDs:      r.IDs,
 		AuthorID: r.AuthorID,
+		Sort:     r.Sort,
 	}
 
 	if r.Pin != nil {

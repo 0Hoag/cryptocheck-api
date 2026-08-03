@@ -59,6 +59,7 @@ func (uc impleUsecase) List(ctx context.Context, sc models.Scope, input post.Lis
 			IDs:      input.IDs,
 			Pin:      input.Pin,
 			AuthorID: input.AuthorID,
+			Sort:     input.Sort,
 		},
 	})
 	if err != nil {
@@ -94,6 +95,7 @@ func (uc impleUsecase) Get(ctx context.Context, sc models.Scope, input post.GetI
 			IDs:      input.IDs,
 			Pin:      input.Pin,
 			AuthorID: input.AuthorID,
+			Sort:     input.Sort,
 		},
 		PagQuery: input.PagQuery,
 	})

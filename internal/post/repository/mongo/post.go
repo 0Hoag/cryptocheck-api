@@ -101,7 +101,7 @@ func (repo *impleRepository) Get(ctx context.Context, sc models.Scope, opts repo
 	cur, err := col.Find(ctx, filter, options.Find().
 		SetLimit(opts.PagQuery.Limit).
 		SetSkip(opts.PagQuery.Offset()).
-		SetSort(bson.D{{"created_at", -1}})) // Newest first
+		SetSort(postSort(opts.Sort)))
 	if err != nil {
 		repo.l.Errorf(ctx, "post.mongo.Get.Find: %v", err)
 		return []models.Post{}, paginator.Paginator{}, err
@@ -127,6 +127,15 @@ func (repo *impleRepository) Get(ctx context.Context, sc models.Scope, opts repo
 		PerPage:     opts.PagQuery.Limit,
 		CurrentPage: opts.PagQuery.Page,
 	}, nil
+}
+
+// postSort only permits the documented feed orders. HTTP validation rejects
+// other values, while this default keeps internal callers newest-first.
+func postSort(sort string) bson.D {
+	if sort == "oldest" {
+		return bson.D{{Key: "created_at", Value: 1}}
+	}
+	return bson.D{{Key: "created_at", Value: -1}}
 }
 
 func (repo impleRepository) Update(ctx context.Context, sc models.Scope, opts repository.UpdateOptions) error {

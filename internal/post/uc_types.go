@@ -26,6 +26,7 @@ type Filter struct {
 	Pin       bool
 	AuthorID  string
 	SourceURL string
+	Sort      string
 }
 
 type GetOneInput struct {

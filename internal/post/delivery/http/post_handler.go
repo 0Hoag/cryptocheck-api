@@ -1,9 +1,9 @@
 package http
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/0Hoag/cryptocheck-api/internal/post"
 	"github.com/0Hoag/cryptocheck-api/pkg/response"
+	"github.com/gin-gonic/gin"
 )
 
 // @Summary Create post
@@ -90,6 +90,7 @@ func (h handler) Detail(c *gin.Context) {
 // @Param type query string false "Type" Enums(company, self)
 // @Param status query string false "Status" Enums(approved, pending, rejected,pending_update)
 // @Param pin query boolean false "Pin"
+// @Param sort query string false "Feed order" Enums(newest, oldest) default(newest)
 // @Param user_id query string false "User ID"
 // @Produce json
 // @Tags Posts
