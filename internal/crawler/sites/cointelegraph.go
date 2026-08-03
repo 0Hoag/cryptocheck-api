@@ -2,6 +2,8 @@ package sites
 
 import (
 	"context"
+	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -11,6 +13,8 @@ import (
 
 type coiTelegraphCrawler struct {
 }
+
+var rssImageSourcePattern = regexp.MustCompile(`(?i)\bsrc\s*=\s*["']([^"']+)["']`)
 
 func NewCoinTelegraphCrawler() crawler.SiteCrawler {
 	return &coiTelegraphCrawler{}
@@ -33,6 +37,22 @@ func newCoinTelegraphCollector() *colly.Collector {
 	return c
 }
 
+// extractRSSImageURL handles feeds that embed their preview image in the HTML
+// description instead of exposing a media:content element. The worker never
+// fetches this URL; it is retained only for the browser/Telegram presentation.
+func extractRSSImageURL(description string) string {
+	matches := rssImageSourcePattern.FindStringSubmatch(description)
+	if len(matches) != 2 {
+		return ""
+	}
+
+	parsed, err := url.Parse(strings.TrimSpace(matches[1]))
+	if err != nil || parsed.Scheme != "https" || parsed.Host == "" {
+		return ""
+	}
+	return parsed.String()
+}
+
 func (c *coiTelegraphCrawler) Name() string {
 	return "cointelegraph"
 }
@@ -51,12 +71,13 @@ func (c *coiTelegraphCrawler) Crawl(ctx context.Context) ([]crawler.Article, err
 		link := e.ChildText("link")
 		summary := e.ChildText("description") // Use description as summary
 
-		// Image might be in media:content or embedded in description
-		// We use local-name() to be namespace agnostic or just simple filtering
-		imageURL := e.ChildAttr("*[name()='media:content']", "url")
+		// Images can be in media metadata or embedded in the RSS description.
+		imageURL := e.ChildAttr("media:content", "url")
 		if imageURL == "" {
-			// Try extracting from description if it contains HTML image
-			// But for now let's rely on media:content which is standard in CT RSS
+			imageURL = e.ChildAttr("media:thumbnail", "url")
+		}
+		if imageURL == "" {
+			imageURL = extractRSSImageURL(summary)
 		}
 
 		// Published Date
