@@ -9,6 +9,7 @@ import (
 	"github.com/0Hoag/cryptocheck-api/pkg/mongo"
 	"github.com/0Hoag/cryptocheck-api/pkg/paginator"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	driverMongo "go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -184,4 +185,54 @@ func (repo impleRepository) Delete(ctx context.Context, sc models.Scope, id stri
 	}
 
 	return nil
+}
+
+// crawlerPostIDsBeyondRetention returns the IDs to soft-delete after posts are
+// already sorted newest-first by the database query.
+func crawlerPostIDsBeyondRetention(posts []models.Post, keep int) []primitive.ObjectID {
+	if keep < 0 {
+		keep = 0
+	}
+	if len(posts) <= keep {
+		return nil
+	}
+	ids := make([]primitive.ObjectID, 0, len(posts)-keep)
+	for _, item := range posts[keep:] {
+		ids = append(ids, item.ID)
+	}
+	return ids
+}
+
+// PruneCrawlerPosts keeps the newest crawl-generated posts for one dedicated
+// bot author. It intentionally uses soft deletion and a non-empty source URL
+// so community/group posts are never included in crawler retention.
+func (repo impleRepository) PruneCrawlerPosts(ctx context.Context, authorID string, keep int) (int64, error) {
+	ownerID, err := primitive.ObjectIDFromHex(authorID)
+	if err != nil {
+		return 0, fmt.Errorf("invalid crawler author id: %w", err)
+	}
+
+	filter := mongo.BuildQueryWithSoftDelete(bson.M{
+		"author_id":  ownerID,
+		"source_url": bson.M{"$exists": true, "$ne": ""},
+	})
+	cur, err := repo.getPostCollection().Find(ctx, filter, options.Find().
+		SetSort(bson.D{{Key: "created_at", Value: -1}}).
+		SetProjection(bson.M{"_id": 1}).
+		SetSkip(int64(max(keep, 0))))
+	if err != nil {
+		return 0, err
+	}
+	defer cur.Close(ctx)
+
+	var posts []models.Post
+	if err := cur.All(ctx, &posts); err != nil {
+		return 0, err
+	}
+	ids := crawlerPostIDsBeyondRetention(posts, 0)
+	if len(ids) == 0 {
+		return 0, nil
+	}
+
+	return repo.getPostCollection().DeleteSoftMany(ctx, bson.M{"_id": bson.M{"$in": ids}})
 }

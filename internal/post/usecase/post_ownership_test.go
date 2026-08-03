@@ -45,6 +45,9 @@ func (s *postRepositoryStub) Delete(context.Context, models.Scope, string) error
 	s.deleteCalls++
 	return nil
 }
+func (s *postRepositoryStub) PruneCrawlerPosts(context.Context, string, int) (int64, error) {
+	return 0, nil
+}
 func (s *postRepositoryStub) GetEngagementCounts(context.Context, []primitive.ObjectID) (map[primitive.ObjectID]repository.EngagementCounts, error) {
 	return nil, nil
 }

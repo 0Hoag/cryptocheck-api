@@ -220,6 +220,16 @@ func main() {
 			// batch into a multi-hour job. Duplicate URLs are skipped before this.
 			time.Sleep(articleDelay)
 		}
+
+		// Retain only the latest crawler news. This is scoped to the dedicated
+		// bot author and non-empty source URLs, so member/community posts are
+		// never part of this cleanup. Repository deletion is soft and recoverable.
+		deleted, err := postRepo.PruneCrawlerPosts(ctx, scope.UserID, 20)
+		if err != nil {
+			l.Errorf(ctx, "Worker: failed to prune older crawler posts: %v", err)
+		} else if deleted > 0 {
+			l.Infof(ctx, "Worker: pruned %d older crawler posts; retaining the latest 20", deleted)
+		}
 	}
 
 	// 6. Scheduler

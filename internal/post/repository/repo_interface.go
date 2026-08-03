@@ -23,6 +23,7 @@ type PostRepo interface {
 	GetOne(ctx context.Context, sc models.Scope, opts GetOneOptions) (models.Post, error)
 	Update(ctx context.Context, sc models.Scope, opts UpdateOptions) error
 	Delete(ctx context.Context, sc models.Scope, id string) error
+	PruneCrawlerPosts(ctx context.Context, authorID string, keep int) (int64, error)
 	GetEngagementCounts(ctx context.Context, postIDs []primitive.ObjectID) (map[primitive.ObjectID]EngagementCounts, error)
 	GetAuthorSummaries(ctx context.Context, authorIDs []primitive.ObjectID) (map[primitive.ObjectID]AuthorSummary, error)
 }

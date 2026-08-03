@@ -96,6 +96,7 @@ go test ./internal/post/... ./internal/comment/...
 ## 3. Community and groups
 
 - [x] Make automated crypto-news publishing resilient to a recreated local MongoDB: worker validates its configured author and falls back to the seeded admin; Docker worker authenticates to MongoDB correctly. (full suite passed; live crawl fetched 55 articles and created a public post)
+	- [x] Retain only the latest 20 source-backed news posts for the crawler bot; older crawler posts are soft-deleted after each job, while community/group posts are excluded. (post repository/worker tests + full Go suite passed)
   - [x] Prevent crawl backlog and overlapping cron jobs: process articles with a five-second provider delay instead of 740 seconds, and skip a scheduled run while the prior crawl is still active. (full Go suite + worker vet passed)
   - [x] Normalize concurrent crawler output before applying the publish cap: deduplicate source URLs and sort newest-first so a slow source cannot push current articles out of the batch. (crawler package + full Go suite passed)
 	- [x] Create a fresh CoinTelegraph Colly collector for every scheduled crawl so XML callbacks cannot accumulate across runs; cancelled jobs stop before a network request. (crawler sites package + full Go suite passed)
